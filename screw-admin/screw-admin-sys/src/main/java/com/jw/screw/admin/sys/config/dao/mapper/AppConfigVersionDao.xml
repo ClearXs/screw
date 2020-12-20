@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jw.screw.admin.sys.config.dao.AppConfigVersionDao">
+
+    <resultMap id="AppConfigVersionVO" type="com.jw.screw.admin.sys.config.model.AppConfigVersionVO">
+        <id property="id" column="ID"/>
+        <result property="configVersion" column="CONFIG_VERSION"/>
+        <result property="configVersionStatus" column="CONFIG_VERSION_STATUS"/>
+        <result property="createBy" column="CREATE_BY"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="updateBy" column="UPDATE_BY"/>
+        <result property="updateTime" column="UPDATE_TIME"/>
+        <result property="deleted" column="DELETED"/>
+        <result property="version" column="VERSION"/>
+        <collection property="appConfigDataVO" ofType="com.jw.screw.admin.sys.config.model.AppConfigDataVO">
+            <id property="id" column="APPCONFIGDATAID"/>
+            <result property="configDataKey" column="CONFIG_DATA_KEY"/>
+            <result property="configDataType" column="CONFIG_DATA_TYPE"/>
+            <result property="configDataValue" column="CONFIG_DATA_VALUE"/>
+            <result property="configDataStoreState" column="CONFIG_DATA_STORE_STATE"/>
+            <result property="configVersionId" column="CONFIG_VERSION_ID"/>
+        </collection>
+    </resultMap>
+
+    <sql id="appConfigVersionColumns">
+        cv.ID,
+        cv.CONFIG_VERSION,
+        cv.CONFIG_VERSION_STATUS,
+        cv.CREATE_BY,
+        cv.CREATE_TIME,
+        cv.UPDATE_BY,
+        cv.UPDATE_TIME,
+        cv.DELETED,
+        cv.VERSION,
+        cv.CONFIG_ID,
+    </sql>
+
+    <sql id="appConfigDataColumns">
+        cd.ID AS APPCONFIGDATAID,
+        cd.CONFIG_DATA_KEY,
+        cd.CONFIG_DATA_TYPE,
+        cd.CONFIG_DATA_VALUE,
+        cd.CONFIG_DATA_STORE_STATE,
+        cd.CONFIG_VERSION_ID
+    </sql>
+
+    <select id="queryByPage" resultMap="AppConfigVersionVO">
+        SELECT
+            <include refid="appConfigVersionColumns"/>
+            <include refid="appConfigDataColumns"/>
+        FROM
+            T_APP_CONFIG_VERSION cv
+        LEFT JOIN T_APP_CONFIG_DATA cd ON cv.ID = cd.ID
+        <where>
+            <if test="queryDTO.configVersion != null and queryDTO.configVersion != ''">
+                <bind name="configVersion" value=" '%' + queryDTO.configVersion +'%' "/>
+                AND cv.CONFIG_VERSION LIKE #{queryDTO.configVersion}
+            </if>
+            <if test="queryDTO.configVersionStatus != null and queryDTO.configVersionStatus != ''">
+                <bind name="configVersionStatus" value=" '%' + queryDTO.configVersionStatus +'%' "/>
+                AND cv.CONFIG_VERSION_STATUS LIKE #{queryDTO.configVersionStatus}
+            </if>
+            <if test="queryDTO.configId != null and queryDTO.configId != ''">
+                <bind name="configId" value=" '%' + queryDTO.configId +'%' "/>
+                AND cv.CONFIG_ID LIKE #{queryDTO.configId}
+            </if>
+            AND cv.DELETED != 1
+        </where>
+        ORDER BY
+            cv.CONFIG_VERSION DESC,
+            cv.CREATE_TIME DESC
+    </select>
+
+    <select id="queryLatestVersion"
+            resultType="com.jw.screw.admin.sys.config.entity.AppConfigVersion">
+        SELECT
+            MAX(CONFIG_VERSION) CONFIG_VERSION
+        FROM
+            T_APP_CONFIG_VERSION
+        <where>
+            <if test="configId != null and config != ''">
+                AND CONFIG_ID = #{configId}
+            </if>
+            AND CONFIG_VERSION IS NOT NULL
+            AND CONFIG_VERSION != ''
+        </where>
+    </select>
+</mapper>

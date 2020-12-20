@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jw.screw.admin.sys.server.dao.AppServerDao">
+    
+    <resultMap id="AppServerVO" type="com.jw.screw.admin.sys.server.model.AppServerVO">
+        <id property="id" column="ID"/>
+        <result property="serverName" column="SERVER_NAME"/>
+        <result property="serverCode" column="SERVER_CODE"/>
+        <result property="serverIp" column="SERVER_IP"/>
+        <result property="serverPort" column="SERVER_PORT"/>
+        <result property="serverState" column="SERVER_STATE"/>
+        <result property="serverVersion" column="SERVER_VERSION"/>
+        <result property="dataSourceId" column="DATA_SOURCE_ID"/>
+        <result property="createBy" column="CREATE_BY"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="updateBy" column="UPDATE_BY"/>
+        <result property="updateTime" column="UPDATE_TIME"/>
+        <result property="deleted" column="DELETED"/>
+        <result property="version" column="VERSION"/>
+        <result property="systemId" column="SYSTEM_ID"/>
+        <result property="systemName" column="SYSTEM_NAME"/>
+        <association property="datasourceVO" javaType="com.jw.screw.admin.sys.datasource.model.DatasourceVO">
+            <id property="id" column="DATASOURCEID"/>
+            <result property="datasourceName" column="DATASOURCE_NAME"/>
+            <result property="datasourceType" column="DATASOURCE_TYPE"/>
+            <result property="datasourceConnectName" column="DATASOURCE_CONNECT_NAME"/>
+            <result property="datasourceIp" column="DATASOURCE_IP"/>
+            <result property="datasourcePort" column="DATASOURCE_PORT"/>
+            <result property="datasourceUsername" column="DATASOURCE_USERNAME"/>
+            <result property="datasourcePassword" column="DATASOURCE_PASSWORD"/>
+        </association>
+    </resultMap>
+
+    <sql id="serverColumns">
+        s.ID,
+        s.SERVER_NAME,
+        s.SERVER_CODE,
+        s.SERVER_IP,
+        s.SERVER_PORT,
+        s.SERVER_STATE,
+        s.SERVER_VERSION,
+        s.DATA_SOURCE_ID,
+        s.CREATE_BY,
+        s.CREATE_TIME,
+        s.UPDATE_BY,
+        s.UPDATE_TIME,
+        s.SYSTEM_ID,
+        s.SYSTEM_NAME,
+        s.DELETED,
+        s.VERSION
+    </sql>
+
+    <sql id="datasourceColumns">
+        d.ID as DATASOURCEID,
+        d.DATASOURCE_NAME,
+        d.DATASOURCE_TYPE,
+        d.DATASOURCE_CONNECT_NAME,
+        d.DATASOURCE_IP,
+        d.DATASOURCE_PORT,
+        d.DATASOURCE_USERNAME,
+        d.DATASOURCE_PASSWORD
+    </sql>
+
+
+    <select id="listAll" resultMap="AppServerVO">
+        SELECT
+            <include refid="serverColumns"/>,
+            <include refid="datasourceColumns"/>
+        FROM
+            T_APP_SERVER s
+        LEFT JOIN T_APP_DATASOURCE d on d.ID = s.DATA_SOURCE_ID
+        WHERE
+            s.SYSTEM_NAME != '默认'
+            AND s.DELETED != 1
+        ORDER BY
+            s.CREATE_TIME DESC
+    </select>
+
+
+    <select id="queryServerDirectory" resultType="java.lang.String">
+        SELECT s.SYSTEM_NAME
+        FROM T_APP_SERVER s
+        <where>
+            <if test="defaultServer != null and defaultServer != ''">
+                AND s.SYSTEM_NAME = '默认'
+            </if>
+            AND s.SYSTEM_NAME IS NOT NULL
+        </where>
+        GROUP BY s.SYSTEM_NAME
+    </select>
+
+    <update id="deleteDataSourceUpdateServer">
+        UPDATE
+        T_APP_SERVER
+        SET
+            DATA_SOURCE_ID = NULL
+        WHERE
+            DATA_SOURCE_ID = #{dataSourceId}
+    </update>
+
+    <select id="queryDefaultServer" resultType="com.jw.screw.admin.sys.server.entity.AppServer">
+        SELECT
+            <include refid="serverColumns"/>
+        WHERE
+            s.SYSTEM_NAME IS NOT NULL
+            AND s.SYSTEM_NAME = '默认'
+    </select>
+
+    <select id="isExist" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM T_APP_SERVER
+        WHERE
+            1 = 1
+            ${whereSql}
+            AND DELETED != 1
+    </select>
+</mapper>

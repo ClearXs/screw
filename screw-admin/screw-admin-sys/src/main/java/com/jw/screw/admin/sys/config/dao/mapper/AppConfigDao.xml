@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jw.screw.admin.sys.config.dao.AppConfigDao">
+
+    <resultMap id="AppConfigVO" type="com.jw.screw.admin.sys.config.model.AppConfigVO">
+        <id property="id" column="ID"/>
+        <result property="configName" column="CONFIG_NAME"/>
+        <result property="configKey" column="CONFIG_KEY"/>
+        <result property="roleId" column="ROLE_ID"/>
+        <result property="serverId" column="SERVER_ID"/>
+        <result property="configJson" column="CONFIG_JSON"/>
+        <result property="configVersionId" column="CONFIG_VERSION_ID"/>
+        <result property="createBy" column="CREATE_BY"/>
+        <result property="createTime" column="CREATE_TIME"/>
+        <result property="updateBy" column="UPDATE_BY"/>
+        <result property="updateTime" column="UPDATE_TIME"/>
+        <result property="version" column="VERSION"/>
+        <result property="deleted" column="DELETED"/>
+        <association property="appServerVO" javaType="com.jw.screw.admin.sys.server.model.AppServerVO">
+            <id property="id" column="SERVERID"/>
+            <result property="serverName" column="SERVER_NAME"/>
+            <result property="serverCode" column="SERVER_CODE"/>
+            <result property="serverIp" column="SERVER_IP"/>
+            <result property="serverPort" column="SERVER_PORT"/>
+            <result property="serverState" column="SERVER_STATE"/>
+            <result property="serverVersion" column="SERVER_VERSION"/>
+            <result property="systemId" column="SYSTEM_ID"/>
+            <result property="systemName" column="SYSTEM_NAME"/>
+        </association>
+        <collection property="appConfigVersionVO" ofType="com.jw.screw.admin.sys.config.model.AppConfigVersionVO">
+            <id property="id" column="APPCONFIGVERSIONID"/>
+            <result property="configVersion" column="CONFIG_VERSION"/>
+            <result property="configVersionStatus" column="CONFIG_VERSION_STATUS"/>
+        </collection>
+    </resultMap>
+
+    <sql id="appConfigColumns">
+        c.ID,
+        c.CONFIG_NAME,
+        c.CONFIG_KEY,
+        c.ROLE_ID,
+        c.SERVER_ID,
+        c.CONFIG_JSON,
+        c.CONFIG_VERSION_ID,
+        c.CREATE_BY,
+        c.CREATE_TIME,
+        c.UPDATE_BY,
+        c.UPDATE_TIME,
+        c.VERSION,
+        c.DELETED
+    </sql>
+
+    <sql id="appConfigVersionColumns">
+        cv.ID as APPCONFIGVERSIONID,
+        cv.CONFIG_VERSION,
+        cv.CONFIG_VERSION_STATUS,
+    </sql>
+
+    <sql id="appServerColumns">
+        s.ID as SERVERID,
+        s.SERVER_NAME,
+        s.SERVER_CODE,
+        s.SERVER_IP,
+        s.SERVER_PORT,
+        s.SERVER_STATE,
+        s.SERVER_VERSION,
+        s.SYSTEM_ID,
+        s.SYSTEM_NAME
+    </sql>
+
+
+    <select id="queryByPage" resultMap="AppConfigVO">
+        SELECT
+            <include refid="appConfigColumns"/>,
+            <include refid="appServerColumns"/>
+        FROM
+            T_APP_CONFIG c
+        LEFT JOIN T_APP_SERVER s ON s.ID = c.SERVER_ID
+        <where>
+            <if test="queryDTO.configName != null and queryDTO.configName != ''">
+                <bind name="configName" value=" '%' + queryDTO.configName +'%' "/>
+                AND c.CONFIG_NAME LIKE #{configName}
+            </if>
+            <if test="queryDTO.createTime != null and queryDTO.createTime.length > 1">
+                <![CDATA[AND c.CREATE_TIME >= TO_DATE(#{queryDTO.createTime[0]}, 'yyyy-mm-dd hh24:mi:ss')]]>
+                <![CDATA[AND c.CREATE_TIME <= TO_DATE(#{queryDTO.createTime[1]}, 'yyyy-mm-dd hh24:mi:ss')]]>
+            </if>
+            <if test="queryDTO.updateTime != null and queryDTO.updateTime.length > 1">
+                <![CDATA[AND c.UPDATE_TIME >= TO_DATE(#{queryDTO.updateTime[0]}, 'yyyy-mm-dd hh24:mi:ss')]]>
+                <![CDATA[AND c.UPDATE_TIME <= TO_DATE(#{queryDTO.updateTime[1]}, 'yyyy-mm-dd hh24:mi:ss')]]>
+            </if>
+            <if test="queryDTO.serverId != null and queryDTO.serverId != ''">
+                AND c.SERVER_ID = #{queryDTO.serverId}
+            </if>
+            AND c.DELETED != 1
+        </where>
+        ORDER BY
+            c.CREATE_TIME DESC
+    </select>
+
+    <select id="isExist" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM T_APP_CONFIG
+        WHERE
+            1 = 1
+            ${whereSql}
+            AND DELETED != 1
+    </select>
+</mapper>

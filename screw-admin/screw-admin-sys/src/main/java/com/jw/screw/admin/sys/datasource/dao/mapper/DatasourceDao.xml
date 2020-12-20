@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jw.screw.admin.sys.datasource.dao.DatasourceDao">
+
+    <resultMap id="DatasourceVO" type="com.jw.screw.admin.sys.datasource.model.DatasourceVO"/>
+
+    <sql id="columns">
+        ID,
+        DATASOURCE_NAME,
+        DATASOURCE_TYPE,
+        DATASOURCE_CONNECT_NAME,
+        DATASOURCE_IP,
+        DATASOURCE_PORT,
+        DATASOURCE_USERNAME,
+        DATASOURCE_PASSWORD,
+        CREATE_BY,
+        CREATE_TIME,
+        UPDATE_BY,
+        UPDATE_TIME,
+        DELETED,
+        VERSION
+    </sql>
+
+    <select id="listAll" resultMap="DatasourceVO">
+        SELECT
+            <include refid="columns"/>
+        FROM
+            T_APP_DATASOURCE
+        ORDER BY
+            CREATE_TIME DESC
+    </select>
+
+    <select id="isExist" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM T_APP_DATASOURCE
+        WHERE
+            1 = 1
+            ${whereSql}
+            AND DELETED != 1
+    </select>
+</mapper>

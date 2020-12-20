@@ -1,0 +1,96 @@
+mybatis-plus:
+  mapper-locations: classpath*:com/jw/screw/admin/sys/**/mapper/*.xml
+  global-config:
+    db-config:
+      # 逻辑删除值 1.删除 0.
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+pagehelper:
+  helperDialect: oracle
+  params: count=countSql
+  reasonable: true
+  supportMethodsArguments: true
+server:
+  port: 8089
+  undertow:
+    buffer-size: 1024
+    direct-buffers: true
+    io-threads: 16
+    worker-threads: 256
+spring:
+  application:
+    name: screw-admin
+  profiles:
+    active: dev
+  datasource:
+#      driver-class-name: oracle.jdbc.OracleDriver
+#      initial-size: 5
+#      max-active: 10
+#      min-idle: 5
+#      username: c##HBP
+#      password: 123456
+#      url: jdbc:oracle:thin:@localhost:1521:orcl
+
+#      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#      initial-size: 5
+#      max-active: 10
+#      min-idle: 5
+#      username: sa
+#      password: 123456
+#      url: jdbc:sqlserver://localhost:1433;DatabaseName=test;integratedSecurity=false
+
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&serverTimezone=Hongkong
+
+    type: com.alibaba.druid.pool.DruidDataSource
+    #Spring Boot 默认是不注入这些属性值的，需要自己绑定
+    #druid 数据源专有配置
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+
+    #配置监控统计拦截的filters，stat:监控统计、log4j：日志记录、wall：防御sql注入
+    #如果允许时报错  java.lang.ClassNotFoundException: org.apache.log4j.Priority
+    #则导入 log4j 依赖即可，Maven 地址：https://mvnrepository.com/artifact/log4j/log4j
+    filters: stat,wall,log4j
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+  freemarker:
+    allow-request-override: false
+    allow-session-override: false
+    cache: false
+    charset: UTF-8
+    check-template-location: true
+    content-type: text/html
+    enabled: true
+    expose-request-attributes: false
+    expose-session-attributes: false
+    expose-spring-macro-helpers: true
+    order: 1
+    prefer-file-system-access: true
+    request-context-attribute: request
+    settings:
+      classic_compatible: true
+      default_encoding: UTF-8
+      template_update_delay: 0
+    suffix: .html
+    template-loader-path: classpath:/templates/
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  mvc:
+    favicon:
+      enabled: false

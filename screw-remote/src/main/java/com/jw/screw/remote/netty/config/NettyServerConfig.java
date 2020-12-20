@@ -1,0 +1,59 @@
+package com.jw.screw.remote.netty.config;
+
+import com.jw.screw.common.transport.RemoteAddress;
+import com.jw.screw.common.transport.UnresolvedAddress;
+import com.jw.screw.remote.SConfig;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+/**
+ * 配置服务启动项
+ * 1.端口
+ * 2.工作反应器的线程数
+ * 3.注册中心地址
+ * @author jiangw
+ * @date 2020/11/26 9:20
+ * @since 1.0
+ */
+public class NettyServerConfig implements SConfig {
+
+    private final int listenerPort;
+
+    private int workerThreads = Runtime.getRuntime().availableProcessors() >> 1;
+
+    private final UnresolvedAddress registerAddress;
+
+    public NettyServerConfig() {
+        this(8080);
+    }
+
+    public NettyServerConfig(int listenerPort) {
+        this.listenerPort = listenerPort;
+        String hostAddress;
+        try {
+            hostAddress = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            hostAddress = "localhost";
+            e.printStackTrace();
+        }
+        this.registerAddress = new RemoteAddress(hostAddress, listenerPort);
+    }
+
+    public int getListenerPort() {
+        return listenerPort;
+    }
+
+    public int getWorkerThreads() {
+        return workerThreads;
+    }
+
+    public void setWorkerThreads(int workerThreads) {
+        this.workerThreads = workerThreads;
+    }
+
+    public UnresolvedAddress getRegisterAddress() {
+        return registerAddress;
+    }
+}
+
