@@ -5,7 +5,7 @@ import com.jw.screw.admin.api.model.ServerMonitorQueryDTO;
 import com.jw.screw.admin.api.service.RemoteMonitorService;
 import com.jw.screw.admin.common.BaseController;
 import com.jw.screw.admin.common.MsgResponse;
-import com.zzht.patrol.screw.monitor.remote.TracingModel;
+import com.jw.screw.monitor.remote.TracingModel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

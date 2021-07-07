@@ -95,7 +95,7 @@
             DATA_SOURCE_ID = #{dataSourceId}
     </update>
 
-    <select id="queryDefaultServer" resultType="com.zzht.ptb.sys.configuration.center.server.entity.AppServer">
+    <select id="queryDefaultServer" resultType="com.jw.screw.admin.sys.server.entity.AppServer">
         SELECT
         <include refid="serverColumns"/>
         WHERE
