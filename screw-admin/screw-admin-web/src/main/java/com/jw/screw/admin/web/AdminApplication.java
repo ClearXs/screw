@@ -1,8 +1,8 @@
 package com.jw.screw.admin.web;
 
-import com.zzht.patrol.screw.spring.boot.EnableScrewMonitor;
-import com.zzht.patrol.screw.spring.boot.EnableScrewProvider;
-import com.zzht.patrol.screw.spring.boot.EnableScrewRegistry;
+import com.jw.screw.spring.boot.EnableScrewMonitor;
+import com.jw.screw.spring.boot.EnableScrewProvider;
+import com.jw.screw.spring.boot.EnableScrewRegistry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;

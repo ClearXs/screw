@@ -5,7 +5,7 @@
     <parent>
         <artifactId>screw-admin</artifactId>
         <groupId>com.jw.screw</groupId>
-        <version>1.0</version>
+        <version>1.1</version>
     </parent>
 
     <artifactId>screw-admin-web</artifactId>
@@ -30,20 +30,17 @@
         <dependency>
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-admin-common</artifactId>
-            <version>1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-admin-sys</artifactId>
-            <version>1.0</version>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-admin-api</artifactId>
-            <version>1.0</version>
         </dependency>
     </dependencies>
 

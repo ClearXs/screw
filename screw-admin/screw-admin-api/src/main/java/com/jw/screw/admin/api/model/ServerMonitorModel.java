@@ -1,7 +1,7 @@
 package com.jw.screw.admin.api.model;
 
-import com.zzht.patrol.monitor.core.mircometer.Metrics;
-import com.zzht.patrol.screw.common.util.StringUtils;
+import com.jw.screw.common.util.StringUtils;
+import com.jw.screw.monitor.core.mircometer.Metrics;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

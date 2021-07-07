@@ -19,7 +19,7 @@ import com.jw.screw.admin.sys.server.dao.AppServerDao;
 import com.jw.screw.admin.sys.server.entity.AppServer;
 import com.jw.screw.admin.sys.server.model.AppServerVO;
 import com.jw.screw.admin.sys.server.service.AppServerService;
-import com.zzht.patrol.screw.provider.annotations.ProviderService;
+import com.jw.screw.provider.annotations.ProviderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;

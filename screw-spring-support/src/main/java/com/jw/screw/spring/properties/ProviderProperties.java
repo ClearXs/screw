@@ -31,7 +31,7 @@ public class ProviderProperties implements DefaultProperties {
     // # 监控指标收集周期（可选）
     // monitor.collect.period=10
     // # 需要发布服务包所在位置（可选）
-    // provider.packageScan=com\\zzht\\ptb\\sys\\configuration\\center\\*
+    // provider.packageScan=
 
     @Override
     public Properties get() {

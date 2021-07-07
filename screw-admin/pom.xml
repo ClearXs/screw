@@ -12,7 +12,7 @@
 
     <groupId>com.jw.screw</groupId>
     <artifactId>screw-admin</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -202,7 +202,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.zzht.patrol.screw</groupId>
+            <groupId>com.jw.screw</groupId>
             <artifactId>screw-spring-boot-starter</artifactId>
         </dependency>
     </dependencies>
@@ -210,9 +210,27 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.zzht.patrol.screw</groupId>
+                <groupId>com.jw.screw</groupId>
                 <artifactId>screw-spring-boot-starter</artifactId>
-                <version>1.0</version>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jw.screw</groupId>
+                <artifactId>screw-admin-sys</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jw.screw</groupId>
+                <artifactId>screw-admin-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jw.screw</groupId>
+                <artifactId>screw-admin-api</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
