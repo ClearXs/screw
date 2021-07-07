@@ -1,6 +1,5 @@
 package com.jw.screw.loadbalance;
 
-
 import com.jw.screw.common.util.Collections;
 import com.jw.screw.remote.netty.SConnector;
 
@@ -29,7 +28,6 @@ public class WeightRandomRule extends AbstractRule {
         int randomWeight = randomInt(weightSum);
         // 根据权重排序connectors
         PriorityQueue<SConnector> sortedConnectors = new PriorityQueue<>(connectors);
-
         int traverseWeightSum = 0;
         for (SConnector sortedConnector : sortedConnectors) {
             if (sortedConnector.channelGroup().isAvailable()) {

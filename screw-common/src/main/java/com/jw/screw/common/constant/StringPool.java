@@ -100,8 +100,11 @@ public interface StringPool {
     String TOKEN = "access_token";
     String SALT = "bsk";
     String GET = "get";
+    String ATINC = "at";
 
     interface FileType {
+        String TEXT = ".txt";
+
         interface Compressed {
             String DOT_ZIP = ".zip";
             String ZIP = "zip";

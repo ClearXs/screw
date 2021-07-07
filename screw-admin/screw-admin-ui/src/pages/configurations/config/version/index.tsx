@@ -5,7 +5,8 @@ import { AppConfig, AppConfigVersion, AppConfigVersionQueryParams} from '@/pages
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import { ModalForm } from '@ant-design/pro-form';
 import { Spin, Tag, message } from 'antd';
-import ConfigData from '@/pages/configurations/config/datas/index'
+import ConfigData from '@/pages/configurations/config/datas/index';
+import style from '../less/index.less';
 
 interface VersionProps {
     dispatch: Dispatch;
@@ -121,38 +122,21 @@ const Version: React.FC<VersionProps> = (props) => {
             )
         }
         nodes.push(
-            <ModalForm
-                title={`${props.appConfig.configName}数据`}
-                onVisibleChange={(visible: boolean) => {
-                    setIsInitData(visible);
-                    const newData = appConfigVersions.map((value, dataIndex) => {
-                        if (dataIndex === index) {
-                            value.isModal = false;
-                        }
-                        return value;
-                    });
-                    configDataRef.current.saveTemp();
-                    props.dispatch({
-                        type: 'appConfigVersion/changeConfigVersions',
-                        payload: newData,
-                        callback: (data) => {
-                            setAppConfigVersion(data)
-                        }
-                    });
-                    if (!visible) {
-                    }
-                }}
-                width={850}
-                trigger={
-                    <a onClick={(event) => {
-                        event.stopPropagation();
-                        setIsInitData(true);
+            <div>
+                <ModalForm
+                    className={style.configData}
+                    title={`${props.appConfig.configName}数据-[${row.configVersion}]-[${versionStatusMap[row.configVersionStatus].text}]`}
+                    onVisibleChange={(visible: boolean) => {
+                        setIsInitData(visible);
                         const newData = appConfigVersions.map((value, dataIndex) => {
                             if (dataIndex === index) {
-                                value.isModal = true;
+                                value.isModal = visible;
                             }
                             return value;
                         });
+                        if (configDataRef.current) {
+                            configDataRef.current.saveTemp();
+                        }
                         props.dispatch({
                             type: 'appConfigVersion/changeConfigVersions',
                             payload: newData,
@@ -160,21 +144,29 @@ const Version: React.FC<VersionProps> = (props) => {
                                 setAppConfigVersion(data)
                             }
                         });
-                    }}>编辑</a>
-                }
-                visible={row.isModal}
-            >
-                {
-                    (isInitData && row.isModal) && (
-                        <ConfigData 
-                            appVersion={row} 
-                            isInit={isInitData} 
-                            refreshVersion={handleQuery}
-                            configDataRef={configDataRef} 
-                        />
-                    )
-                }
-            </ModalForm>)
+                    }}
+                    width={1000}
+                    trigger={
+                        <a onClick={(event) => {
+                            event.stopPropagation();
+                        }}>编辑</a>
+                    }
+                    visible={row.isModal}
+                >
+                    {
+                        (isInitData && row.isModal) && (
+                            <ConfigData 
+                                appVersion={row} 
+                                isInit={isInitData} 
+                                refreshVersion={handleQuery}
+                                configDataRef={configDataRef} 
+                            />
+                        )
+                    }
+                </ModalForm>
+            </div>
+
+            )
         return nodes;
     }
 
@@ -192,7 +184,7 @@ const Version: React.FC<VersionProps> = (props) => {
                 setAppConfigVersion(list);
                 setIsLoading(false);
             }
-        })
+        });
     }
 
     useEffect(() => {
@@ -216,16 +208,17 @@ const Version: React.FC<VersionProps> = (props) => {
             <ProTable<AppConfigVersion>
                 columns={columns}
                 actionRef={actionRef}
-                pagination={{
-                    current: defaultPageNum,
-                    pageSize: defaultPageSize,
-                    total: pageTotal,
-                    onChange: (pageNum, pageSize) => {
-                        setIsLoading(true);
-                        setQueryParams(Object.assign(queryParams, {pageNum, pageSize}));
-                        handleQuery();
-                    }
-                }}
+                // pagination={{
+                //     current: defaultPageNum,
+                //     pageSize: defaultPageSize,
+                //     total: pageTotal,
+                //     onChange: (pageNum, pageSize) => {
+                //         setIsLoading(true);
+                //         setQueryParams(Object.assign(queryParams, {pageNum, pageSize}));
+                //         handleQuery();
+                //     }
+                // }}
+                pagination={false}
                 search={false}
                 options={false}
                 dataSource={appConfigVersions}

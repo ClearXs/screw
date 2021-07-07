@@ -28,7 +28,7 @@ public class ConfigDTO {
 
     @ApiModelProperty(value = "数据源")
     @JsonProperty("dataSource")
-    private DatasourceModel datasourceModel;
+    private List<DatasourceModel> datasourceModel;
 
     @ApiModelProperty(value = "配置")
     @JsonProperty("configs")

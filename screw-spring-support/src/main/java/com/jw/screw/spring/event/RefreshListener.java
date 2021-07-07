@@ -1,6 +1,5 @@
 package com.jw.screw.spring.event;
 
-import com.jw.screw.spring.Property;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -23,11 +22,7 @@ public class RefreshListener implements ApplicationListener<ApplicationEvent> {
             applicationContext = (ApplicationContext) event.getSource();
         }
         if (applicationContext != null) {
-            String[] names = applicationContext.getBeanDefinitionNames();
-            for (String name : names) {
-                Object bean = applicationContext.getBean(name);
-                Property.refreshProperties(bean);
-            }
+            ConfigListener.refreshConfig(applicationContext);
         }
     }
 }

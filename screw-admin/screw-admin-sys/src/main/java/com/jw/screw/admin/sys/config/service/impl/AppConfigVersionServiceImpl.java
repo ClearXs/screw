@@ -46,9 +46,6 @@ public class AppConfigVersionServiceImpl implements AppConfigVersionService {
     @Resource
     private AppConfigDao appConfigDao;
 
-    @Resource
-    private AppConfigService appConfigService;
-
     @Override
     public Integer addAppConfigVersion(AppConfigVersionAddDTO appConfigVersionAddDTO) throws InstantiationException, IllegalAccessException, BasicOperationException {
         AppConfigVersion configVersion = new EntityFactoryBuilder<AppConfigVersion>()
@@ -74,7 +71,7 @@ public class AppConfigVersionServiceImpl implements AppConfigVersionService {
             appConfigVersion.setConfigVersionStatus(ConfigVersionConstant.CLOSED);
             Validators.doResult(appConfigVersionDao.update(appConfigVersion,
                     new UpdateWrapper<AppConfigVersion>()
-                            .eq("CONFIG_VERSION_STATUS", ConfigVersionConstant.OPEN)));
+                            .eq("CONFIG_VERSION_STATUS", ConfigVersionConstant.OPEN).eq("ID", appConfigVersion.getId())));
         }
         // 2.更新当前版本
         AppConfigVersion configVersion = new EntityFactoryBuilder<AppConfigVersion>()

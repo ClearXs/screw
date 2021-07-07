@@ -12,6 +12,8 @@ import com.jw.screw.admin.sys.config.entity.AppConfig;
 import com.jw.screw.admin.sys.config.entity.AppConfigVersion;
 import com.jw.screw.admin.sys.config.model.AppConfigVO;
 import com.jw.screw.admin.sys.config.service.AppConfigService;
+import com.jw.screw.admin.sys.datasource.dao.DatasourceDao;
+import com.jw.screw.admin.sys.datasource.entity.Datasource;
 import com.jw.screw.admin.sys.datasource.model.DatasourceVO;
 import com.jw.screw.admin.sys.server.dao.AppServerDao;
 import com.jw.screw.admin.sys.server.entity.AppServer;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +49,9 @@ public class RemoteConfigService {
     private AppConfigVersionDao appVersionDao;
 
     @Autowired
+    private DatasourceDao datasourceDao;
+
+    @Autowired
     private AppConfigDao appConfigDao;
 
     @Autowired
@@ -67,12 +73,11 @@ public class RemoteConfigService {
         configDTO.setServerPort(serverVO.getServerPort());
         configDTO.setServerVersion(serverVO.getServerVersion());
         // 2.数据源信息
-        DatasourceVO datasourceVO = serverVO.getDatasourceVO();
+        List<DatasourceVO> datasourceVO = serverVO.getDatasourceVO();
         if (!ObjectUtils.isEmpty(datasourceVO)) {
-            DatasourceModel datasourceModel = new EntityFactoryBuilder<DatasourceModel>()
+            List<DatasourceModel> datasourceModel = new EntityFactoryBuilder<DatasourceModel>()
                     .setEntityClass(DatasourceModel.class)
-                    .setVo(datasourceVO)
-                    .build();
+                    .build(datasourceVO.toArray());
             configDTO.setDatasourceModel(datasourceModel);
         }
         List<AppConfigVO> appConfigVOS = appConfigService.queryConfigByServerId(serverVO.getId());
@@ -105,6 +110,14 @@ public class RemoteConfigService {
         configDTO.setServerIp(server.getServerIp());
         configDTO.setServerPort(server.getServerPort());
         configDTO.setServerCode(server.getServerCode());
+        configDTO.setServerName(server.getServerName());
+        if (!StringUtils.isEmpty(server.getDataSourceId())) {
+            List<Datasource> datasource = this.datasourceDao.selectList(new QueryWrapper<Datasource>().in("ID", server.getDataSourceId()));
+            List<DatasourceModel> datasourceModel = new EntityFactoryBuilder<DatasourceModel>()
+                    .setEntityClass(DatasourceModel.class)
+                    .build(datasource.toArray());
+            configDTO.setDatasourceModel(datasourceModel);
+        }
         List<ConfigModel> configModels = new EntityFactoryBuilder<ConfigModel>()
                 .setEntityClass(ConfigModel.class)
                 .build(Collections.singletonList(config).toArray());
@@ -113,7 +126,6 @@ public class RemoteConfigService {
     }
 
     /**
-     *
      * @param configId
      * @return 返回json串
      * @see #queryConfig(String)
@@ -154,6 +166,9 @@ public class RemoteConfigService {
      * @return {@link AppConfigVersion}
      */
     public AppConfigVersion queryVersion(String versionId) {
+        if (StringUtils.isEmpty(versionId)) {
+            return null;
+        }
         return appVersionDao.selectOne(new QueryWrapper<AppConfigVersion>().eq("ID", versionId));
     }
 }

@@ -2,7 +2,6 @@ package com.jw.screw.remote.netty.config;
 
 import com.jw.screw.common.transport.RemoteAddress;
 import com.jw.screw.common.transport.UnresolvedAddress;
-import com.jw.screw.remote.SConfig;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,7 +15,7 @@ import java.net.UnknownHostException;
  * @date 2020/11/26 9:20
  * @since 1.0
  */
-public class NettyServerConfig implements SConfig {
+public class NettyServerConfig {
 
     private final int listenerPort;
 
@@ -38,6 +37,11 @@ public class NettyServerConfig implements SConfig {
             e.printStackTrace();
         }
         this.registerAddress = new RemoteAddress(hostAddress, listenerPort);
+    }
+
+    public NettyServerConfig(String serverAddress, int listenerPort) {
+        this.listenerPort = listenerPort;
+        this.registerAddress = new RemoteAddress(serverAddress, listenerPort);
     }
 
     public int getListenerPort() {

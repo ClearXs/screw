@@ -1,8 +1,12 @@
 package com.jw.screw.provider;
 
 import com.jw.screw.common.Status;
+import com.jw.screw.common.constant.StringPool;
+import com.jw.screw.common.exception.ExceptionTraceStack;
 import com.jw.screw.common.transport.body.RequestBody;
 import com.jw.screw.common.transport.body.ResponseBody;
+import com.jw.screw.monitor.opentracing.ScrewTracer;
+import com.jw.screw.monitor.opentracing.TracerCache;
 import com.jw.screw.provider.model.ServiceWrapper;
 import com.jw.screw.remote.Protocol;
 import com.jw.screw.remote.modle.RemoteTransporter;
@@ -44,38 +48,70 @@ public class NettyProviderRpcRequestProcessor extends AbstractRpcRequestProcesso
         // 从provider中找到注册的服务，如果找不到则发送失败请求
         ServiceWrapper serviceWrapper = provider.getServiceWrapperManager().wrapperContainer().lookupWrapper(serviceName);
         if (serviceWrapper == null) {
-            remoteTransporter = rejected(Status.SERVICE_NOT_FOUND, request, serviceName, invokerId, null);
+            remoteTransporter = rejected(Status.SERVICE_NOT_FOUND, request, serviceName, methodName, invokerId, null);
             return remoteTransporter;
         }
+        // tracer放入缓存中
+        TracerCache.put((ScrewTracer) requestBody.getAttached());
         try {
             Object generate = rpcInvokeGenerate(serviceWrapper, methodName, parameters);
             ResponseBody responseBody = new ResponseBody(invokerId);
             responseBody.setStatus(Status.OK.getValue());
             responseBody.setResult(generate);
+            responseBody.attachment(requestBody.getAttached());
+            // 清除缓存
+            TracerCache.clear();
             remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.RPC_RESPONSE, responseBody, request.getUnique());
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            remoteTransporter = rejected(Status.SERVICE_INVOKE_ERROR, request, serviceName, invokerId, e);
+        } catch (Exception e) {
+            if (e instanceof InvocationTargetException) {
+                remoteTransporter = rejected(Status.SERVICE_INVOKE_ERROR, request, serviceName, methodName, invokerId, e);
+            } else if (e instanceof NoSuchMethodException) {
+                remoteTransporter = rejected(Status.SERVICE_NOT_FOUND, request, serviceName, methodName, invokerId, e);
+            } else if (e instanceof IllegalAccessException) {
+                remoteTransporter = rejected(Status.SERVICE_ILLEGAL_ACCESS, request, serviceName, methodName, invokerId, e);
+            }
             e.printStackTrace();
         }
         return remoteTransporter;
     }
 
-    private RemoteTransporter rejected(Status status, final RemoteTransporter request, String serviceName, long invokeId, Throwable cause) {
+    private RemoteTransporter rejected(Status status, final RemoteTransporter request, String serviceName, String methodName, long invokeId, Exception e) {
+        RequestBody requestBody = (RequestBody) request.getBody();
         ResponseBody responseBody = new ResponseBody(invokeId);
         responseBody.setResult(null);
         switch (status) {
             case SERVICE_NOT_FOUND:
                 responseBody.setStatus(status.getValue());
-                responseBody.setError(serviceName + ": " + status.getDescription());
+                responseBody.setError(serviceName + StringPool.AT + methodName + StringPool.COLON +  status.getDescription());
                 break;
             case SERVICE_INVOKE_ERROR:
                 responseBody.setStatus(status.getValue());
-                responseBody.setError("invoke service errors：" + cause.getMessage());
+                responseBody.setError(Status.SERVICE_INVOKE_ERROR.getDescription() + StringPool.COLON + e.getMessage());
+                if (e instanceof InvocationTargetException) {
+                    responseBody.setExceptionTrace(buildExceptionStack((InvocationTargetException) e));
+                }
+                break;
+            case SERVICE_ILLEGAL_ACCESS:
+                responseBody.setStatus(status.getValue());
+                responseBody.setError(serviceName + StringPool.AT + methodName + StringPool.COLON +  status.getDescription());
+                break;
             default:
                 logger.warn("unexpected status: {}", status);
                 break;
         }
+        responseBody.attachment(requestBody.getAttached());
+        TracerCache.clear();
         return RemoteTransporter.createRemoteTransporter(Protocol.Code.RPC_RESPONSE, responseBody, request.getUnique());
     }
 
+    private ExceptionTraceStack buildExceptionStack(InvocationTargetException e) {
+        Throwable targetException = e.getTargetException();
+        ExceptionTraceStack exceptionTraceStack = new ExceptionTraceStack();
+        exceptionTraceStack.setCause(targetException.getClass().getName() + StringPool.COLON + targetException.getMessage());
+        StackTraceElement[] stackTrace = targetException.getStackTrace();
+        for (StackTraceElement stackTraceElement : stackTrace) {
+            exceptionTraceStack.addTraceStack(StringPool.ATINC + " " +  stackTraceElement.toString());
+        }
+        return exceptionTraceStack;
+    }
 }

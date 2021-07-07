@@ -69,7 +69,7 @@ public class AppConfigDataController extends BaseController {
     @ApiOperation(value = "保存配置文件")
     @PostMapping(value = "/saveConfigData")
     public MsgResponse<Integer> saveConfigData(@RequestBody List<AppConfigDataUpdateDTO> appConfigDataUpdateDTO,
-                                                       @RequestParam String logicOperate) {
+                                               @RequestParam String logicOperate) {
         MsgResponse<Integer> response;
         try {
             response = handleBasicOperationResponse("更新配置数据成功", appConfigDataService.saveAppConfigData(appConfigDataUpdateDTO, logicOperate));

@@ -12,6 +12,7 @@ import { message } from 'antd';
 import { AppServer } from '@/pages/configurations/server/data';
 import { ConnectState } from '@/models/connect';
 import _ from 'lodash';
+import { deleteAttr } from '@/utils/utils';
 
 export interface AppServerState {
     isLoading: boolean;
@@ -63,9 +64,9 @@ const AppServerModel: AppServerModelType = {
             });
         },
         *editAppServer({ payload, callback }, { call, put, select }) {
+            
             const result = yield call(editAppServer, payload);
             yield callback && callback(result);
-
         },
         *addAppServer({ payload, callback }, { call, put, select }) {
             const result = yield call(addAppServer, payload);
@@ -80,17 +81,18 @@ const AppServerModel: AppServerModelType = {
             callback && callback(result);
         },
         *testConnect({ payload, callback}, { call }) {
-            let id = '';
-            if (!_.isEmpty(payload)) {
-                if (payload.hasOwnProperty('dataSource')) {
-                    id = payload.dataSource;
-                }
-            }
-            const result = yield call(testConnect, id);
-            callback && callback(result);
+            let newPayload = JSON.parse(JSON.stringify(payload));
+            newPayload = deleteAttr(newPayload, 'createBy');
+            newPayload = deleteAttr(newPayload, 'createTime');
+            newPayload = deleteAttr(newPayload, 'id');
+            newPayload = deleteAttr(newPayload, 'updateBy');
+            newPayload = deleteAttr(newPayload, 'updateTime');
+            newPayload = deleteAttr(newPayload, 'version');
+            const result = yield call(testConnect, newPayload);
+            yield callback && callback(result);
         },
         *queryServerDirectory({ payload, callback}, { call }) {
-            const result = yield call(queryServerDirectory);
+            const result = yield call(queryServerDirectory, payload);
             callback && callback(result);
         },
         *isExist({ payload, callback }, { call }) {

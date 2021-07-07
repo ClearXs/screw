@@ -47,5 +47,5 @@ public interface AppConfigDataService {
     /**
      * 移除配置数据
      */
-    Integer removeAppConfigData(List<AppConfigDataVO> ids) throws BasicOperationException;
+    Integer removeAppConfigData(List<AppConfigDataVO> configDataList) throws BasicOperationException;
 }

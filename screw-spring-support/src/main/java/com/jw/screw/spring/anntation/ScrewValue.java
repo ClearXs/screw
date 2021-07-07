@@ -7,10 +7,10 @@ import java.lang.annotation.*;
  * <p>
  *     规则：配置文件名-具体配置名称
  * </p>
- *  <p>
+ *  <code>
  *      #@ScrewValue("screw-properties.name")
  *      private int test
- *  </p>
+ *  </code>
  * @author jiangw
  * @date 2020/12/9 17:53
  * @since 1.0

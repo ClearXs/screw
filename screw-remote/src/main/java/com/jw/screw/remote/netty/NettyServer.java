@@ -30,17 +30,27 @@ public class NettyServer extends AbstractNettyService {
 
     private static Logger logger = LoggerFactory.getLogger(NettyServer.class);
 
+    private final NettyServerConfig serverConfig;
+
+    /**
+     * 服务端的启动器
+     */
     private ServerBootstrap serverBootstrap;
 
-    private NettyServerConfig serverConfig;
-
+    /**
+     * reactor模式中接受连接请求的main-reactor
+     */
     private NioEventLoopGroup boss;
 
+    /**
+     * reactor模式中业务处理的sub-reactor
+     */
     private NioEventLoopGroup worker;
 
     private Channel serverChannel;
 
     public NettyServer(NettyServerConfig serverConfig) {
+        super();
         this.serverConfig = serverConfig;
         init();
     }
@@ -122,7 +132,7 @@ public class NettyServer extends AbstractNettyService {
             worker.shutdownGracefully();
 
             // 关闭业务处理器
-            shutdownProcess();
+            shutdownProcessors();
         }
     }
 

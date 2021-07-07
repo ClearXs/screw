@@ -18,7 +18,7 @@ export interface AppServer {
     updateTime?: string;
     deleted?: string;
     version?: number;
-    datasource?: DataSource;
+    datasource?: DataSource[];
     AppConfig?: AppConfig[]
 }
 

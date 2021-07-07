@@ -9,7 +9,6 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 public class RemoteTransporterEncoder extends MessageToByteEncoder<RemoteTransporter> {
 
-
     @Override
     protected void encode(ChannelHandlerContext ctx, RemoteTransporter msg, ByteBuf out) throws Exception {
         // 对象序列化

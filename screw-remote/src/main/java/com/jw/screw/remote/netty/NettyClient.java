@@ -1,5 +1,6 @@
 package com.jw.screw.remote.netty;
 
+import com.jw.screw.common.Callback;
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.remote.modle.HeartBeats;
 import com.jw.screw.remote.modle.RemoteTransporter;
@@ -27,6 +28,10 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 一个netty的客户端
@@ -46,7 +51,12 @@ public class NettyClient extends AbstractNettyService {
 
     private final Timer timer = new HashedWheelTimer();
 
+    private int retryTimed = 0;
+
+    private AtomicBoolean isRetry = new AtomicBoolean(false);
+
     public NettyClient(NettyClientConfig clientConfig) {
+        super();
         this.clientConfig = clientConfig;
         init();
     }
@@ -72,24 +82,67 @@ public class NettyClient extends AbstractNettyService {
         bootstrap.option(ChannelOption.TCP_NODELAY, true);
         // 关闭连接不发通知
         bootstrap.option(ChannelOption.ALLOW_HALF_CLOSURE, false);
+
+        bootstrap.channel(NioSocketChannel.class);
     }
 
     @Override
     public void start() {
     }
 
-    public SConnector connect(ChannelGroup channelGroup) throws InterruptedException {
+    /**
+     * 客户端连接通用方法，方法加锁，阻塞调用者，直至可以连接
+     * @param channelGroup 通道组，重连成功时向通道组添加新的通道
+     * @param callback 回调方法
+     * @return 连接成功时，直接返回相应的连接器
+     * @throws InterruptedException 线程中断异常
+     */
+    public SConnector connect(ChannelGroup channelGroup, Callback callback) throws InterruptedException, ExecutionException {
         UnresolvedAddress address = clientConfig.getDefaultAddress();
         if (address == null) {
             throw new IllegalArgumentException("default address is empty");
         }
-        return connect(address, channelGroup, 4);
+        return connect(address, channelGroup, 4, callback);
     }
 
-    public SConnector connect(UnresolvedAddress address, ChannelGroup channelGroup, final int weight) throws InterruptedException {
-        bootstrap.channel(NioSocketChannel.class);
+    /**
+     * @see #connect(ChannelGroup, Callback)
+     * @param address 远程服务器地址
+     * @param weight 客户端连接权重
+     */
+    public SConnector connect(UnresolvedAddress address, ChannelGroup channelGroup, final int weight, Callback callback) throws InterruptedException, ExecutionException {
+        ExecutorService connector = Executors.newSingleThreadExecutor();
+        final ReentrantLock connectionLock = new ReentrantLock();
+        final Condition condition = connectionLock.newCondition();
+        Future<SConnector> connectorFuture = connector.submit(new Callable<SConnector>() {
+            @Override
+            public SConnector call() throws Exception {
+                connectionLock.lock();
+                try {
+                    SConnector sConnector = null;
+                    while (!isRetry.get()) {
+                        sConnector = callConnect(address, channelGroup, weight, callback);
+                    }
+                    condition.signalAll();
+                    return sConnector;
+                } finally {
+                    connectionLock.unlock();
+                }
+            }
+        });
+        connectionLock.lock();
+        try {
+            condition.await();
+            connector.shutdown();
+        } finally {
+            connectionLock.unlock();
+        }
+        return connectorFuture.get();
+    }
+
+    private SConnector callConnect(UnresolvedAddress address, ChannelGroup channelGroup, final int weight, Callback callback) throws InterruptedException {
         // 重连
-        final ConnectorWatchDog connectorWatchDog = new ConnectorWatchDog(bootstrap, timer, channelGroup) {
+        final ConnectorWatchDog connectorWatchDog = new ConnectorWatchDog(bootstrap, timer, channelGroup, callback) {
 
             @Override
             public ChannelHandler[] channelHandlers() {
@@ -128,17 +181,34 @@ public class NettyClient extends AbstractNettyService {
                 return weight;
             }
         };
-        synchronized (bootstrapLock()) {
-            // 处理器
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline()
-                            .addLast(connectorWatchDog.channelHandlers());
-                }
-            });
-            ChannelFuture channelFuture = bootstrap.connect(InetSocketAddress.createUnresolved(address.getHost(), address.getPort())).sync();
-            connector.setChannelFuture(channelFuture);
+        try {
+            synchronized (bootstrapLock()) {
+                // 处理器
+                bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline()
+                                .addLast(connectorWatchDog.channelHandlers());
+                    }
+                });
+                ChannelFuture channelFuture = bootstrap.connect(InetSocketAddress.createUnresolved(address.getHost(), address.getPort())).sync();
+                connector.setChannelFuture(channelFuture);
+            }
+            if (callback != null) {
+                callback.acceptable(connector);
+            }
+            isRetry.set(true);
+        } catch (Exception e) {
+            if (callback != null) {
+                callback.rejected(e);
+            }
+            retryTimed++;
+            long delay = 4L << retryTimed;
+            if (delay >= GlobeConfig.MAX_DELAY_TIMED) {
+                delay = GlobeConfig.MAX_DELAY_TIMED;
+            }
+            Thread.sleep(delay);
+            isRetry.set(false);
         }
         return connector;
     }
@@ -150,7 +220,7 @@ public class NettyClient extends AbstractNettyService {
             // 关闭工作反应器
             worker.shutdownGracefully();
             // 关闭业务处理器
-            shutdownProcess();
+            shutdownProcessors();
         }
     }
 

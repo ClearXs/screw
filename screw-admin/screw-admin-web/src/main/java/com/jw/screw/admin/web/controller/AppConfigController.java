@@ -62,10 +62,10 @@ public class AppConfigController extends BaseController {
 
     @ApiOperation(value = "删除配置")
     @DeleteMapping(value = "/deleteConfig")
-    public MsgResponse<Integer> deleteConfig(String configId) {
+    public MsgResponse<Integer> deleteConfig(String configIds) {
         MsgResponse<Integer> response;
         try {
-            response = handleBasicOperationResponse("删除配置成功", appConfigService.deleteAppConfig(configId));
+            response = handleBasicOperationResponse("删除配置成功", appConfigService.deleteAppConfig(configIds));
         } catch (Exception e) {
             response = getExceptionResponse(e);
         }

@@ -5,9 +5,10 @@ import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import { ModalForm } from '@ant-design/pro-form';
 import { PlusOutlined, ExclamationCircleOutlined, ExclamationCircleTwoTone } from '@ant-design/icons';
-import { Spin, Button, message, Modal, Popover } from 'antd';
+import { Spin, Button, message, Modal, Popover, notification, Tabs } from 'antd';
 import { DataSource } from './data';
 import DataSourceForm from './components/DataSourceForm';
+import _ from 'lodash';
 
 interface DataSourceProps {
     dispatch: Dispatch;
@@ -16,12 +17,23 @@ interface DataSourceProps {
 
 const { confirm } = Modal;
 
+const { TabPane } = Tabs;
+
 const Server: React.FC<DataSourceProps> = (props) => {
+    
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const [loadingTip, setLoadingTip] = useState<string>('');
 
     const [dataSources, setDataSources] = useState<DataSource[]>([]);
 
+    const [selectedDataSource, setSelectedDataSource] = useState<DataSource[]>([]);
+
+    const [selectedTabKey, setSelectedTabKey] = useState<string>('mysql');
+
     const actionRef = useRef<ActionType>();
+
+    const formRef = useRef<any>();
 
     const columns: ProColumns<DataSource>[] = [
         {
@@ -64,16 +76,32 @@ const Server: React.FC<DataSourceProps> = (props) => {
             render: (_, record) => [
                 <ModalForm
                     onFinish={async (value: any) => {
+                        if (event.type === 'keypress' && event.keyCode === 13) {
+                            return false;
+                        }
                         value.id = record.id;
                         value.version = record.version;
+                        value.datasourceType = selectedTabKey;
+                        const variables = await formRef.current.getVariables();
+                        value.datasourceConnectVariables = variables;
                         await fromSubmit(value);
                         return true;
                     }}
-                    title={exampleDatasource()}
+                    title={exampleDatasource(true)}
                     trigger={<a type="primary">编辑</a>}
                     key="details"
                 >
-                    <DataSourceForm {...record} />
+                    <Tabs defaultActiveKey={record.datasourceType}>
+                        <TabPane tab="mysql" key="mysql" disabled={'mysql' !== record.datasourceType}>
+                            <DataSourceForm formRef={formRef} record={record} dispatch={props.dispatch} activeKey={record.datasourceType} />
+                        </TabPane>
+                        <TabPane tab="oracle" key="oracle" disabled={'oracle' !== record.datasourceType}>
+                            <DataSourceForm formRef={formRef} record={record} dispatch={props.dispatch} activeKey={record.datasourceType} />
+                        </TabPane>
+                        <TabPane tab="mssql" key="mssql" disabled={'mssql' !== record.datasourceType}>
+                            <DataSourceForm formRef={formRef} record={record} dispatch={props.dispatch} activeKey={record.datasourceType} />
+                        </TabPane>
+                    </Tabs>
                 </ModalForm>,
                 <a onClick={() => {
                     confirm({
@@ -83,7 +111,9 @@ const Server: React.FC<DataSourceProps> = (props) => {
                         okType: 'danger',
                         cancelText: '取消',
                         onOk() {
-                            deleteDataSource(record);
+                            const records = new Array();
+                            records.push(record);
+                            deleteDataSource(records);
                         },
                     })
                 }}>
@@ -95,16 +125,24 @@ const Server: React.FC<DataSourceProps> = (props) => {
     ];
 
     const testConnection = (record: DataSource) => {
+        setIsLoading(true)
+        setLoadingTip('测试连接中...');
         props.dispatch({
             type: 'dataSource/testConnect',
-            payload: record,
+            payload: record.id,
             callback: (result) => {
+                setIsLoading(false);
+                setLoadingTip('');
                 const { success, data, msg } = result;
                 if (success) {
                     if (data) {
-                        message.success('数据源测试连接成功');
+                        notification.success({
+                            description: '数据源测试连接成功'
+                        });
                     } else {
-                        message.error('数据源测试连接失败，检查配置！');
+                        notification.error({
+                            description: '数据源测试连接失败，检查配置！'
+                        });
                     }
                 } else {
                     message.error(msg);
@@ -125,69 +163,69 @@ const Server: React.FC<DataSourceProps> = (props) => {
         });
     }
 
-    const fromSubmit = (value: any, handlerState: number | undefined): Promise => {
+    const fromSubmit = (value: any, handlerState: number | undefined): Promise<boolean> => {
         return new Promise<boolean>((resolve) => {
             setIsLoading(true);
             // 添加
             if (handlerState === 0) {
                 props.dispatch({
-                type: 'dataSource/addDatabase',
-                payload: value,
-                callback: ( result ) => {
-                    const { success, msg } = result;
-                    if (success) {
-                        message.success(msg);
-                        handleQuery();
-                    } else {
-                        message.error(msg);
+                    type: 'dataSource/addDatabase',
+                    payload: value,
+                    callback: ( result ) => {
+                        const { success, msg } = result;
+                        if (success) {
+                            message.success(msg);
+                            handleQuery();
+                        } else {
+                            message.error(msg);
+                        }
+                        
                     }
-                    
-                }
                 })
                 // 编辑
             } else {
                 props.dispatch({
-                type: 'dataSource/editDatabase',
-                payload: value,
-                callback: ( result ) => {
-                    const { success, msg } = result;
-                    if (success) {
-                        message.success(msg);
-                        handleQuery();
-                    } else {
-                        message.error(msg);
+                    type: 'dataSource/editDatabase',
+                    payload: value,
+                    callback: ( result ) => {
+                        const { success, msg } = result;
+                        if (success) {
+                            message.success(msg);
+                            handleQuery();
+                        } else {
+                            message.error(msg);
+                        }
                     }
-                }
                 })
             }
             resolve(true);
         })
     };
 
-    const deleteDataSource = (value: any) => {
+    const deleteDataSource = (value: DataSource) => {
         return new Promise<boolean>((resolve) => {
             setIsLoading(true);
             props.dispatch({
                 type: 'dataSource/deleteDatabase',
                 payload: value,
                 callback: (result) => {
-                const { success, msg } = result;
-                if (success) {
-                    message.success(msg);
-                    handleQuery();
-                } else {
-                    message.error(msg);
-                }
-                resolve(true);
+                    const { success, msg } = result;
+                    if (success) {
+                        message.success(msg);
+                        handleQuery();
+                    } else {
+                        message.error(msg);
+                    }
+                    resolve(true);
                 }
             });
         })
     }
 
-    const exampleDatasource = ():React.ReactNode => {
+    const exampleDatasource = (isEdit?: boolean):React.ReactNode => {
         return (
             <div>
-                [新增数据源]
+                [{isEdit ? '编辑数据源' : '新增数据源'}]
                 <Popover placement="bottom" title='示例' content={
                     (
                         <div>
@@ -215,7 +253,7 @@ const Server: React.FC<DataSourceProps> = (props) => {
     });
 
     return (
-        <Spin spinning={isLoading}>
+        <Spin spinning={isLoading} tip={loadingTip}>
             <PageHeaderWrapper>
                 <ProTable<DataSource>
                     actionRef={actionRef}
@@ -224,21 +262,68 @@ const Server: React.FC<DataSourceProps> = (props) => {
                     pagination={false}
                     search={false}
                     options={false}
+                    rowSelection={{
+                        onChange: (selectedKeys, selectedRow) => {
+                            setSelectedDataSource(selectedRow);
+                        }
+                    }}
+                    rowKey="id"
+                    tableAlertRender={false}
+                    tableAlertOptionRender={false}
                     toolBarRender={() => [
                         <ModalForm
                             title={exampleDatasource()}
                             onFinish={async (value: any) => {
+                                if (event.type === 'keypress' && event.keyCode === 13) {
+                                    return false;
+                                }
+                                value.datasourceType = selectedTabKey;
+                                const variables = await formRef.current.getVariables();
+                                value.datasourceConnectVariables = variables;
                                 await fromSubmit(value, 0);
                                 return true;
                             }}
                             trigger={
-                                <Button type="primary">
-                                    <PlusOutlined />
-                                    新增数据源
-                                </Button>
+                                <div>
+                                    <Button type="primary" style={{marginRight: '5px'}}>
+                                        <PlusOutlined />
+                                        新增数据源
+                                    </Button>,
+                                    <Button type="default" onClick={(event) => {
+                                        event.stopPropagation();
+                                        if (_.isEmpty(selectedDataSource)) {
+                                            message.warn("当前未选择数据!");
+                                        } else {
+                                            confirm({
+                                                title: `确认删除${selectedDataSource.length}条当前数据源?`,
+                                                icon: <ExclamationCircleOutlined />,
+                                                okText: '确认',
+                                                okType: 'danger',
+                                                cancelText: '取消',
+                                                onOk() {
+                                                    deleteDataSource(selectedDataSource);
+                                                },
+                                            });
+                                        }
+                                    }}>
+                                        批量删除
+                                    </Button>
+                                </div>
                             }
                         >
-                            <DataSourceForm />
+                            <Tabs defaultActiveKey={selectedTabKey} onChange={(activeKey) => {
+                                setSelectedTabKey(activeKey);
+                            }}>
+                                <TabPane tab="mysql" key="mysql">
+                                    <DataSourceForm activeKey={selectedTabKey} dispatch={props.dispatch} formRef={formRef} />
+                                </TabPane>
+                                <TabPane tab="oracle" key="oracle">
+                                    <DataSourceForm activeKey={selectedTabKey} dispatch={props.dispatch} formRef={formRef} />
+                                </TabPane>
+                                <TabPane tab="mssql" key="mssql">
+                                    <DataSourceForm activeKey={selectedTabKey} dispatch={props.dispatch} formRef={formRef} />
+                                </TabPane>
+                            </Tabs>
                         </ModalForm>,
                     ]}
                 />

@@ -415,9 +415,9 @@ public class ConsumerConfig {
 
     @Bean
     public FactoryBeanRegisterProcessor factory(@Qualifier("screwConsumer") ScrewSpringConsumer screwConsumer) {
-        FactoryBeanRegisterProcessor processor = new FactoryBeanRegisterProcessor();
-        processor.setProxies(screwConsumer.getProxies());
-        return processor;
+        FactoryBeanRegisterProcessor com.jw.screw.monitor.remote.processor = new FactoryBeanRegisterProcessor();
+        com.jw.screw.monitor.remote.processor.setProxies(screwConsumer.getProxies());
+        return com.jw.screw.monitor.remote.processor;
     }
 
     @Bean

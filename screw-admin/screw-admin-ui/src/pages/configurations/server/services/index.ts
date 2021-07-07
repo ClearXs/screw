@@ -43,13 +43,15 @@ export async function addAppServer(params: AppServer) {
  * 删除应用服务
  * @param params
  */
-export async function deleteAppServer(params: AppServer) {
+export async function deleteAppServer(params: AppServer[]) {
     return request(`${baseUrl}/deleteAppServer`, {
         method: 'DELETE',
         headers:{
             'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },
-        data: Qs.stringify({serverId: params.id})       
+        data: Qs.stringify({serverIds: params.map((value: AppServer) => {
+            return value.id;
+        }).join()})       
     });
 }
 
@@ -67,13 +69,10 @@ export async function loadDataSource() {
  * 测试数据源
  * @param params
  */
-export async function testConnect(id: string) {
+export async function testConnect(params) {
     return request(`${dataSourceUrl}/testConnect`, {
         method: 'POST',
-        headers:{
-            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
-        data: Qs.stringify({dataSourceId: id})   
+        data: params   
     });
 }
 
@@ -81,8 +80,8 @@ export async function testConnect(id: string) {
  * 查询默认的服务及其配置
  * @param params
  */
-export async function queryServerDirectory() {
-    return request(`${baseUrl}/queryServerDirectory?operate=DEFAULT`, {
+export async function queryServerDirectory(operate: string) {
+    return request(`${baseUrl}/queryServerDirectory?operate=${operate}`, {
         method: 'GET',
     });
 }

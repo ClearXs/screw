@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2020/12/10 17:30
  * @since 1.0
  */
-public class RequestBody implements Body {
+public class RequestBody extends AbstractBody {
 
     private final static AtomicInteger ID_GENERATOR = new AtomicInteger(0);
 
@@ -32,6 +32,11 @@ public class RequestBody implements Body {
      * 请求的参数
      */
     private Object[] parameters;
+
+    /**
+     * 请求期望返回的类型
+     */
+    private transient Class<?> expectedReturnType;
 
     public RequestBody() {
         invokeId = ID_GENERATOR.getAndIncrement();
@@ -65,6 +70,14 @@ public class RequestBody implements Body {
         this.parameters = parameters;
     }
 
+    public Class<?> getExpectedReturnType() {
+        return expectedReturnType;
+    }
+
+    public void setExpectedReturnType(Class<?> expectedReturnType) {
+        this.expectedReturnType = expectedReturnType;
+    }
+
     @Override
     public String toString() {
         return "RequestBody{" +
@@ -75,3 +88,4 @@ public class RequestBody implements Body {
                 '}';
     }
 }
+

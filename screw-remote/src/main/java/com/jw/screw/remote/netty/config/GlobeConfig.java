@@ -1,12 +1,15 @@
 package com.jw.screw.remote.netty.config;
 
-import com.jw.screw.remote.SConfig;
-
-public interface GlobeConfig extends SConfig {
+public interface GlobeConfig {
 
     /**
      * 连接超时时间
      */
-    int CONNECT_TIMEOUT_MILLIS = 3000;
+    int CONNECT_TIMEOUT_MILLIS = 30000;
+
+    /**
+     * 最大等待连接时长
+     */
+    long MAX_DELAY_TIMED = 86400000L;
 
 }

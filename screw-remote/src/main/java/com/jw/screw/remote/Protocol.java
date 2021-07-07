@@ -185,5 +185,19 @@ public class Protocol {
          */
         byte BROADCAST = 73;
 
+        /**
+         * 性能指标
+         */
+        byte METRICS = 74;
+
+        /**
+         * 链路追踪
+         */
+        byte TRACING = 75;
+
+        /**
+         * 监控中心地址
+         */
+        byte MONITOR_ADDRESS = 76;
     }
 }

@@ -1,6 +1,5 @@
 package com.jw.screw.loadbalance;
 
-
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.remote.netty.SConnector;
 
@@ -11,7 +10,7 @@ import java.util.Map;
  * @date 2020/12/3 16:42
  * @since 1.0
  */
-public class BaseLoadBalancer implements LoadBalancer {
+public class BaseLoadBalancer implements com.jw.screw.loadbalance.LoadBalancer {
 
     private final Map<UnresolvedAddress, SConnector> serviceInfo;
 
@@ -37,7 +36,7 @@ public class BaseLoadBalancer implements LoadBalancer {
     }
 
     @Override
-    public void setRule(Rule rule) {
+    public void setRule(com.jw.screw.loadbalance.Rule rule) {
         this.rule = rule;
     }
 }

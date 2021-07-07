@@ -46,10 +46,10 @@
 
     <select id="queryByPage" resultMap="AppConfigVersionVO">
         SELECT
-            <include refid="appConfigVersionColumns"/>
-            <include refid="appConfigDataColumns"/>
+        <include refid="appConfigVersionColumns"/>
+        <include refid="appConfigDataColumns"/>
         FROM
-            T_APP_CONFIG_VERSION cv
+        T_APP_CONFIG_VERSION cv
         LEFT JOIN T_APP_CONFIG_DATA cd ON cv.ID = cd.ID
         <where>
             <if test="queryDTO.configVersion != null and queryDTO.configVersion != ''">
@@ -67,22 +67,21 @@
             AND cv.DELETED != 1
         </where>
         ORDER BY
-            cv.CONFIG_VERSION DESC,
-            cv.CREATE_TIME DESC
+        cv.CONFIG_VERSION DESC,
+        cv.CREATE_TIME DESC
     </select>
 
     <select id="queryLatestVersion"
             resultType="com.jw.screw.admin.sys.config.entity.AppConfigVersion">
         SELECT
-            MAX(CONFIG_VERSION) CONFIG_VERSION
+        MAX(CONFIG_VERSION) CONFIG_VERSION
         FROM
-            T_APP_CONFIG_VERSION
+        T_APP_CONFIG_VERSION
         <where>
             <if test="configId != null and config != ''">
                 AND CONFIG_ID = #{configId}
             </if>
             AND CONFIG_VERSION IS NOT NULL
-            AND CONFIG_VERSION != ''
         </where>
     </select>
 </mapper>

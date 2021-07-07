@@ -43,7 +43,7 @@ public enum RuleObjectFactory {
      * @param name
      * @return
      */
-    public static Rule getRuleByName(String name) {
+    public static com.jw.screw.loadbalance.Rule getRuleByName(String name) {
         for (RuleObjectFactory rule : values()) {
             if (rule.getName().equals(name)) {
                 return rule.getRule();

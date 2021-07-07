@@ -1,6 +1,5 @@
 package com.jw.screw.loadbalance;
 
-
 import com.jw.screw.common.util.Collections;
 import com.jw.screw.remote.netty.SConnector;
 
@@ -24,7 +23,6 @@ public class RoundRobinRule extends AbstractRule {
             return null;
         }
         int connectorSize = connectors.size();
-
         while (retryCount.get() < RETRY_NUMS) {
             if (counter.get() == connectorSize - 1) {
                 counter.set(0);
@@ -35,7 +33,6 @@ public class RoundRobinRule extends AbstractRule {
                 return connector;
             }
         }
-
         retryCount.set(0);
         return null;
     }

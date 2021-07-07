@@ -25,4 +25,8 @@ public class Datasource extends CommonEntity implements Serializable {
     private String datasourceUsername;
 
     private String datasourcePassword;
+
+    private String datasourceConnectType;
+
+    private String datasourceConnectVariables;
 }

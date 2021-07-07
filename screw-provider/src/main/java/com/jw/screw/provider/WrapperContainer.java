@@ -17,21 +17,21 @@ public interface WrapperContainer<T> {
 
     /**
      * 子类通过map进行存储这个wrapper
-     * @param name
-     * @param wrapper
+     * @param name service name
+     * @param wrapper T
      */
     void registerWrapper(String name, T wrapper);
 
     /**
      * 查找这个wrapper
-     * @param name
-     * @return
+     * @param name service name
+     * @return T
      */
     T lookupWrapper(String name);
 
     /**
      * 返回已经获取的所有wrapper，list进行封装
-     * @return
+     * @return {@link LinkedBlockingQueue<ServiceWrapper>}
      */
     LinkedBlockingQueue<ServiceWrapper> wrappers();
 }

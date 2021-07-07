@@ -74,10 +74,10 @@ public class AppServerController extends BaseController {
 
     @ApiOperation(value = "删除应用服务")
     @DeleteMapping(value = "/deleteAppServer")
-    public MsgResponse<Integer> deleteAppServer(String serverId){
+    public MsgResponse<Integer> deleteAppServer(String serverIds){
         MsgResponse<Integer> result;
         try {
-            result = handleBasicOperationResponse("删除应用服务成功", appServerService.deleteAppServerById(serverId));
+            result = handleBasicOperationResponse("删除应用服务成功", appServerService.deleteAppServerById(serverIds));
         } catch (Exception e) {
             result = getExceptionResponse(e);
         }

@@ -18,7 +18,6 @@ public class AppServerAddDTO {
     private String serverName;
 
     @ApiModelProperty(value = "服务ip")
-    @NotEmpty(message = "ip不能位空")
     private String serverIp;
 
     @ApiModelProperty(value = "服务端口")

@@ -5,12 +5,11 @@
     <parent>
         <artifactId>screw</artifactId>
         <groupId>com.jw.screw</groupId>
-        <version>1.0</version>
+        <version>1.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>screw-provider</artifactId>
-
 
     <dependencies>
         <dependency>
@@ -25,7 +24,22 @@
 
         <dependency>
             <groupId>com.jw.screw</groupId>
+            <artifactId>screw-loadbalance</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
             <artifactId>screw-registry</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-opentracing</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -41,26 +41,36 @@ export async function editDatabase(params: DataSource) {
  * 删除数据源
  * @param params
  */
-export async function deleteDatabase(params: DataSource) {
+export async function deleteDatabase(params: DataSource[]) {
     return request(`${baseUrl}/deleteDatasource`, {
         method: 'DELETE',
         headers:{
             'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
         },
-        data: Qs.stringify({id: params.id})
+        data: Qs.stringify({ids: params.map((value: DataSource) => {
+            return value.id;
+        }).join()})
     });
 }
 
 /**
  * 测试数据源
- * @param params
+ * @param params ids
  */
-export async function testConnect(params: DataSource) {
+export async function testConnect(params: string) {
     return request(`${baseUrl}/testConnect`, {
         method: 'POST',
-        headers:{
-            'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
-        data: Qs.stringify({dataSourceId: params.id})
+        data: params
+    });
+}
+
+/**
+ * 测试数据源
+ * @param params ids
+ */
+export async function testConnectByEntity(params: DataSource) {
+    return request(`${baseUrl}/testConnectByEntity`, {
+        method: 'POST',
+        data: params
     });
 }

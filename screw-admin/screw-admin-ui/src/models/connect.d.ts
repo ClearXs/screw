@@ -7,7 +7,7 @@ import { DataSourceState } from '@/pages/configurations/datasource/models/index'
 import { AppConfigState } from '@/pages/configurations/config/models/config';
 import { AppConfigVersionState } from '@/pages/configurations/config/version/models/version';
 import { AppConfigDataState } from '@/pages/configurations/config/datas/models/data';
-
+import { MonitorState } from '@/pages/monitor/models/monitor';
 
 export { GlobalModelState, UserModelState };
 
@@ -34,6 +34,7 @@ export interface ConnectState {
   appConfig: AppConfigState;
   appConfigData: AppConfigDataState;
   appConfigVersions: AppConfigVersionState;
+  monitor: MonitorState;
 }
 
 export interface Route extends MenuDataItem {

@@ -1,12 +1,14 @@
 package com.jw.screw.common.transport.body;
 
+import com.jw.screw.common.exception.ExceptionTraceStack;
+
 /**
  * 响应body
  * @author jiangw
  * @date 2020/12/10 17:30
  * @since 1.0
  */
-public class ResponseBody implements Body {
+public class ResponseBody extends AbstractBody {
 
     /**
      * rpc调用的唯一id
@@ -28,6 +30,11 @@ public class ResponseBody implements Body {
      */
     private String error;
 
+    /**
+     * 错误异常栈
+     */
+    private ExceptionTraceStack exceptionTraceStack;
+
     public ResponseBody(long invokeId) {
         this.invokeId = invokeId;
     }
@@ -48,6 +55,14 @@ public class ResponseBody implements Body {
         this.result = result;
     }
 
+    public long getInvokeId() {
+        return invokeId;
+    }
+
+    public void setInvokeId(long invokeId) {
+        this.invokeId = invokeId;
+    }
+
     public String getError() {
         return error;
     }
@@ -56,12 +71,12 @@ public class ResponseBody implements Body {
         this.error = error;
     }
 
-    public long getInvokeId() {
-        return invokeId;
+    public ExceptionTraceStack getExceptionTrace() {
+        return exceptionTraceStack;
     }
 
-    public void setInvokeId(long invokeId) {
-        this.invokeId = invokeId;
+    public void setExceptionTrace(ExceptionTraceStack exceptionTraceStack) {
+        this.exceptionTraceStack = exceptionTraceStack;
     }
 
     @Override
@@ -74,3 +89,4 @@ public class ResponseBody implements Body {
                 '}';
     }
 }
+

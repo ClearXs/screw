@@ -3,6 +3,7 @@ package com.jw.screw.admin.web.controller;
 import com.jw.screw.admin.common.BaseController;
 import com.jw.screw.admin.common.MsgResponse;
 import com.jw.screw.admin.sys.datasource.dto.DatasourceAddDTO;
+import com.jw.screw.admin.sys.datasource.dto.DatasourceDTO;
 import com.jw.screw.admin.sys.datasource.dto.DatasourceUpdateDTO;
 import com.jw.screw.admin.sys.datasource.model.DatasourceVO;
 import com.jw.screw.admin.sys.datasource.service.DatasourceService;
@@ -63,10 +64,10 @@ public class DatasourceController extends BaseController {
 
     @ApiOperation(value = "删除数据源")
     @DeleteMapping(value = "/deleteDatasource")
-    public MsgResponse<Object> deleteDatasource(String id) {
+    public MsgResponse<Object> deleteDatasource(String ids) {
         MsgResponse<Object> result;
         try {
-            Integer success = databaseService.deleteDatasource(id);
+            Integer success = databaseService.deleteDatasource(ids);
             result = handleBasicOperationResponse("删除数据源成功", success);
         } catch (Exception e) {
             result = getExceptionResponse(e);
@@ -76,10 +77,23 @@ public class DatasourceController extends BaseController {
 
     @ApiOperation(value = "测试数据库链接")
     @PostMapping(value = "/testConnect")
-    public MsgResponse<Boolean> testConnect(String dataSourceId) {
+    public MsgResponse<Boolean> testConnect(@RequestBody @Valid String dataSourceIds) {
         MsgResponse<Boolean> result;
         try {
-            boolean isConnection = databaseService.testConnection(dataSourceId);
+            boolean isConnection = databaseService.testConnection(dataSourceIds);
+            result = getSuccessResponse("测试数据库完成", isConnection);
+        } catch (Exception e) {
+            result = getExceptionResponse(e);
+        }
+        return result;
+    }
+
+    @ApiOperation(value = "测试数据库链接")
+    @PostMapping(value = "/testConnectByEntity")
+    public MsgResponse<Boolean> testConnectByEntity(@RequestBody @Valid DatasourceDTO datasource) {
+        MsgResponse<Boolean> result;
+        try {
+            boolean isConnection = databaseService.testConnection(datasource);
             result = getSuccessResponse("测试数据库完成", isConnection);
         } catch (Exception e) {
             result = getExceptionResponse(e);

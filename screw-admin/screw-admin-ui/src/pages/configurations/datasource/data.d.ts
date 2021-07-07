@@ -7,6 +7,8 @@ export interface DataSource {
     datasourcePort?: string;
     datasourceUsername?: string;
     datasourcePassword?: string;
+    datasourceConnectType?: string;
+    datasourceConnectVariables?: string;
     createBy?: string;
     createTime?: string;
     updateBy?: string;

@@ -64,25 +64,22 @@
 
     <select id="listAll" resultMap="AppServerVO">
         SELECT
-            <include refid="serverColumns"/>,
-            <include refid="datasourceColumns"/>
+        <include refid="serverColumns"/>
         FROM
-            T_APP_SERVER s
-        LEFT JOIN T_APP_DATASOURCE d on d.ID = s.DATA_SOURCE_ID
+        T_APP_SERVER s
         WHERE
-            s.SYSTEM_NAME != '默认'
-            AND s.DELETED != 1
+        s.SYSTEM_NAME != '模板配置'
+        AND s.DELETED != 1
         ORDER BY
-            s.CREATE_TIME DESC
+        s.CREATE_TIME DESC
     </select>
-
 
     <select id="queryServerDirectory" resultType="java.lang.String">
         SELECT s.SYSTEM_NAME
         FROM T_APP_SERVER s
         <where>
             <if test="defaultServer != null and defaultServer != ''">
-                AND s.SYSTEM_NAME = '默认'
+                AND s.SYSTEM_NAME = '模板配置'
             </if>
             AND s.SYSTEM_NAME IS NOT NULL
         </where>
@@ -91,7 +88,7 @@
 
     <update id="deleteDataSourceUpdateServer">
         UPDATE
-        T_APP_SERVER
+            T_APP_SERVER
         SET
             DATA_SOURCE_ID = NULL
         WHERE
@@ -100,10 +97,10 @@
 
     <select id="queryDefaultServer" resultType="com.jw.screw.admin.sys.server.entity.AppServer">
         SELECT
-            <include refid="serverColumns"/>
+        <include refid="serverColumns"/>
         WHERE
-            s.SYSTEM_NAME IS NOT NULL
-            AND s.SYSTEM_NAME = '默认'
+        s.SYSTEM_NAME IS NOT NULL
+        AND s.SYSTEM_NAME = '默认'
     </select>
 
     <select id="isExist" resultType="java.lang.Integer">

@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppServerState, AppServerModelType } from '@/pages/configurations/server/models/index';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
-import { ModalForm, StepsForm, ProFormRadio } from '@ant-design/pro-form';
+import { ModalForm, StepsForm, ProFormCheckbox } from '@ant-design/pro-form';
 import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Spin, Button, message, Tag, Modal } from 'antd';
+import { Spin, Button, message, Modal, Tag, Popover } from 'antd';
 import { AppServer, AddAppServer } from './data';
 import { DataSource } from '@/pages/configurations/datasource/data'
 import ServerForm from './components/ServerForm';
@@ -23,6 +23,10 @@ const Server: React.FC<ServerProps> = (props) => {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const [dataSourceLoading, setDataSourceLoading] = useState<boolean>(false);
+
+  const [dataSourceTip, setDataSourceTip] = useState<string>();
+
   const [appServers, setAppServers] = useState<AppServer[]>([]);
 
   const [stepVisible, setStepVisible] = useState<boolean>(false);
@@ -36,6 +40,8 @@ const Server: React.FC<ServerProps> = (props) => {
   const serverConfigRef = useRef<any>();
 
   const [stepCurrent, setStepCurrent] = useState<number>(0);
+
+  const [selectedServer, setSelectedServer] = useState<AppServer[]>();
 
   const serverStatusMap = {
     0: {
@@ -66,39 +72,44 @@ const Server: React.FC<ServerProps> = (props) => {
     {
       title: '应用名称',
       dataIndex: 'serverName',
+      sorter: (a, b) => a.serverName - b.serverName
     },
     {
       title: '应用code',
       dataIndex: 'serverCode',
     },
+    // {
+    //   title: 'ip',
+    //   dataIndex: 'serverIp',
+    //   hideInSearch: false,
+    // },
     {
-      title: 'ip',
-      dataIndex: 'serverIp',
-      hideInSearch: false,
-    },
-    {
-      title: '端口',
+      title: '服务端口',
       dataIndex: 'serverPort',
       hideInSearch: false,
+      tip: '该端口为服务启动端口',
+      sorter: (a, b) => a.serverPort - b.serverPort
     },
     {
       title: '版本号',
       dataIndex: 'serverVersion',
       hideInSearch: false,
+      sorter: (a, b) => a.serverVersion - b.serverVersion
     },
-    {
-      title: '状态',
-      dataIndex: 'serverState',
-      hideInSearch: false,
-      render: (_, record) => {
-        return (
-          <Tag color={serverStatusMap[record.serverState].color}>{serverStatusMap[record.serverState].text}</Tag>
-        )
-      }
-    },
+    // {
+    //   title: '状态',
+    //   dataIndex: 'serverState',
+    //   hideInSearch: false,
+    //   render: (_, record) => {
+    //     return (
+    //       <Tag color={serverStatusMap[record.serverState].color}>{serverStatusMap[record.serverState].text}</Tag>
+    //     )
+    //   }
+    // },
     {
       title: '创建时间',
       dataIndex: 'createTime',
+      valueType: "dateTime",
       hideInSearch: false,
     },
     {
@@ -107,14 +118,34 @@ const Server: React.FC<ServerProps> = (props) => {
       hideInSearch: false,
     },
     {
-      title: '数据源名称',
+      title: '数据源',
       dataIndex: 'datasource',
       search: false,
-      render: (record: any) => {
-        if (_.isEmpty(record) || record === '-') {
-          return '未选择数据源'
+      render: (datasource: any) => {
+        if (_.isEmpty(datasource) || datasource === '-') {
+          return '未选择数据源';
         } else {
-          return record.datasourceName;
+          return datasource.map((o: DataSource, index: number) => {
+            return (
+              <div style={{marginTop: '5px'}}>
+                <Popover title={o.datasourceName} content={(
+                    <div>
+                      <p>数据源名称：{o.datasourceName}</p>
+                      <p>数据源类型：{o.datasourceType}</p>
+                      <p>连接名称：{o.datasourceConnectName}</p>
+                      <p>数据源ip：{o.datasourceIp}</p>
+                      <p>数据源端口：{o.datasourcePort}</p>
+                      <p>用户名：{o.datasourceUsername}</p>
+                      <p>密码：{o.datasourcePassword}</p>
+                  </div>
+                )}>
+                  <Tag style={{cursor: 'pointer'}}>
+                    {o.datasourceName}
+                  </Tag>
+                </Popover>
+              </div>
+            )
+          })
         }
       }
     },
@@ -123,6 +154,17 @@ const Server: React.FC<ServerProps> = (props) => {
       key: 'option',
       valueType: 'option',
       render: (_, record) => [
+        <a key="monitor" onClick={(event) => {
+          event.stopPropagation();
+          props['history'].push({
+            pathname: '/monitor',
+            state: {
+              serverKey: record.serverCode
+            }
+          });
+        }}>
+          监控
+        </a>,
         <a key="details" onClick={(event) => {
           event.stopPropagation();
           props['history'].push({
@@ -131,11 +173,18 @@ const Server: React.FC<ServerProps> = (props) => {
               serverId: record.id
             }
           });
-        }}>明细</a>,
+        }}>配置明细</a>,
         <ModalForm
           onFinish={async (value: any) => {
             value.id = record.id;
             value.version = record.version;
+            if (value.dataSourceId.length === 0) {
+              value.dataSourceId = '';
+            } else {
+              if (value.dataSourceId.join) {
+                value.dataSourceId = value.dataSourceId.join();
+              }
+            }
             await fromSubmit(value, undefined);
             return true;
           }}
@@ -149,19 +198,18 @@ const Server: React.FC<ServerProps> = (props) => {
           <ServerForm {...record} />
           {
             dataSources && (
-              <ProFormRadio.Group
+              <ProFormCheckbox.Group
                 name="dataSourceId"
                 label="数据源"
-                radioType="button"
+                initialValue={record.dataSourceId}
                 options={
-                  dataSources.map((dataSource) => {
-                    return {label: dataSource.datasourceName, value: dataSource.id}
-                })
+                    dataSources.map((dataSource) => {
+                      return {label: dataSource.datasourceName + '-'  + '[' + dataSource.datasourceType + ']', value: dataSource.id}
+                  })
                 }
               />
             )
           }
-
         </ModalForm>,
         <a onClick={() => {
           confirm({
@@ -171,7 +219,9 @@ const Server: React.FC<ServerProps> = (props) => {
             okType: 'danger',
             cancelText: '取消',
             onOk() {
-              deleteServer(record);
+              const records = new Array();
+              records.push(record);
+              deleteServer(records);
             },
           });
         }}>
@@ -206,7 +256,7 @@ const Server: React.FC<ServerProps> = (props) => {
           serverVersion: params.serverVersion,
           systemId: '',
           systemName: '',
-          dataSourceId: params.dataSource,
+          dataSourceId: _.isEmpty(params.dataSource) ? '' : params.dataSource.map((o: DataSource) => o.id).join(),
           appConfig: params.configs
         }
         props.dispatch({
@@ -224,9 +274,10 @@ const Server: React.FC<ServerProps> = (props) => {
               resolve(false);
             }
           }
-        })
+        });
         // 编辑
       } else {
+        params.serverIp = '';
         props.dispatch({
           type: 'server/editAppServer',
           payload: params,
@@ -242,12 +293,12 @@ const Server: React.FC<ServerProps> = (props) => {
               resolve(false);
             }
           }
-        })
+        });
       }
-    })
+    });
   };
 
-  const deleteServer = (value: any) => {
+  const deleteServer = (value: AppServer[]) => {
     return new Promise<boolean>((resolve) => {
       setIsLoading(true);
       props.dispatch({
@@ -265,7 +316,7 @@ const Server: React.FC<ServerProps> = (props) => {
           resolve(true);
         }
       });
-    })
+    });
   }
 
   const isExistServer = (params: any): Promise<boolean> => {
@@ -321,17 +372,22 @@ const Server: React.FC<ServerProps> = (props) => {
 
   const testDataSource = (dataSourceId: string): Promise<boolean> => {
     return new Promise((resolve, reject) => {
+      setDataSourceLoading(true);
+      setDataSourceTip('测试连接中...')
       props.dispatch({
         type: 'server/testConnect',
         payload: dataSourceId,
         callback: (result) => {
+          setDataSourceLoading(false);
+          setDataSourceTip('');
           const success = result['success'];
           const data = result['data'];
+          const msg = result['msg'];
           if (data && success) {
             resolve(true);
           } else {
             confirm({
-              title: '当前数据库测试异常，确认是否走下一步?',
+              title: msg + '，确认是否走下一步?',
               icon: <ExclamationCircleOutlined />,
               okText: '确认',
               okType: 'danger',
@@ -344,9 +400,8 @@ const Server: React.FC<ServerProps> = (props) => {
               }
             });
           }
-
         }
-      })
+      });
     })
   }
 
@@ -354,7 +409,7 @@ const Server: React.FC<ServerProps> = (props) => {
     return new Promise((resolve, reject) => {
       props.dispatch({
         type: 'server/queryServerDirectory',
-        payload: '',
+        payload: 'ALL',
         callback: (result) => {
           const success = result['success'];
           const msg = result['msg'];
@@ -367,8 +422,8 @@ const Server: React.FC<ServerProps> = (props) => {
             resolve(false);
           }
         }
-      })
-    })
+      });
+    });
   }
 
   useEffect(() => {
@@ -378,7 +433,7 @@ const Server: React.FC<ServerProps> = (props) => {
   });
 
   return (
-    <Spin spinning={isLoading}>
+    <Spin spinning={isLoading} tip={''}>
       <PageHeaderWrapper>
         <ProTable<AppServer>
           actionRef={actionRef}
@@ -387,15 +442,41 @@ const Server: React.FC<ServerProps> = (props) => {
           pagination={false}
           search={false}
           options={false}
+          rowSelection={{
+            onChange: (selectedKeys, selectedRow) => {
+                setSelectedServer(selectedRow);
+            },
+          }}
+          rowKey="id"
+          tableAlertRender={false}
+          tableAlertOptionRender={false}
           toolBarRender={() => [
-            <Button type="primary" onClick={(event) => {
-              event.stopPropagation();
-              setStepVisible(true);
-              setStepCurrent(0);
-            }}>
-                <PlusOutlined />
-                新增应用服务
-            </Button>
+            <div>
+              <Button type="primary" style={{marginRight: '5px'}} onClick={(event) => {
+                event.stopPropagation();
+                setStepVisible(true);
+                setStepCurrent(0);
+              }}>
+                  <PlusOutlined />
+                  新增应用服务
+              </Button>
+              <Button type="default" onClick={(event) => {
+                if (_.isEmpty(selectedServer)) {
+                  message.warn('当前未选择数据!')
+                } else {
+                    confirm({
+                      title: `确认删除${selectedServer.length}条当前应用?`,
+                      icon: <ExclamationCircleOutlined />,
+                      okText: '确认',
+                      okType: 'danger',
+                      cancelText: '取消',
+                      onOk() {
+                        deleteServer(selectedServer);
+                      },
+                  });
+                }
+              }}>批量删除</Button>
+            </div>
           ]}
         />
       </PageHeaderWrapper>
@@ -443,44 +524,46 @@ const Server: React.FC<ServerProps> = (props) => {
           <ServerForm />
         </StepsForm.StepForm>
         <StepsForm.StepForm
-          name="datasource"
-          title="选择数据源"
-          onFinish={async (params: any) => {
-            const confirmNext = (): Promise<boolean> => {
-              return new Promise((resolve) => {
-                confirm({
-                  title: '当前数据库数据源为空，确认是否走下一步?',
-                  icon: <ExclamationCircleOutlined />,
-                  okText: '确认',
-                  okType: 'danger',
-                  cancelText: '取消',
-                  onOk() {
-                    resolve(true);
-                  },
-                  onCancel() {
-                    resolve(false);
-                  }
-                });
-              })
-            }
-            let isFinish: boolean;
-            if (_.isEmpty(params)) {
-              isFinish = await confirmNext();
-            } else {
-              // 测试连接
-              isFinish = await testDataSource(params);
-            }
-            // 查找数据源
-            if (isFinish) {
-              isFinish = await queryDefaultServer();
-            }
-            return isFinish;
-          }}
-        >
-          <DataSourceForm 
-            dataSources={dataSources}
-            history={props['history']}
-          />
+            name="datasource"
+            title="选择数据源"
+            onFinish={async (params: any) => {
+              const confirmNext = (): Promise<boolean> => {
+                return new Promise((resolve) => {
+                  confirm({
+                    title: '当前数据库数据源为空，确认是否走下一步?',
+                    icon: <ExclamationCircleOutlined />,
+                    okText: '确认',
+                    okType: 'danger',
+                    cancelText: '取消',
+                    onOk() {
+                      resolve(true);
+                    },
+                    onCancel() {
+                      resolve(false);
+                    }
+                  });
+                })
+              }
+              let isFinish: boolean;
+              if (_.isEmpty(params)) {
+                isFinish = await confirmNext();
+              } else {
+                // 测试连接
+                isFinish = await testDataSource(params.dataSource.map((o:DataSource) => o.id).join());
+              }
+              // 查找服务
+              if (isFinish) {
+                isFinish = await queryDefaultServer();
+              }
+              return isFinish;
+            }}
+          >
+            <Spin spinning={dataSourceLoading} tip={dataSourceTip}>
+              <DataSourceForm 
+                  dataSources={dataSources}
+                  history={props['history']}
+                />
+            </Spin>
         </StepsForm.StepForm>
         <StepsForm.StepForm
           name="config"

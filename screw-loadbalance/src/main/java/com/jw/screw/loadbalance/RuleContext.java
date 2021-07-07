@@ -1,6 +1,5 @@
 package com.jw.screw.loadbalance;
 
-
 import com.jw.screw.remote.netty.SConnector;
 
 /**
@@ -12,10 +11,6 @@ import com.jw.screw.remote.netty.SConnector;
 public class RuleContext {
 
     private final Rule rule;
-
-    public RuleContext(Rule rule, LoadBalancer loadBalancer) {
-        this.rule = rule;
-    }
 
     public RuleContext(LoadBalancer loadBalancer) {
         this(loadBalancer, RuleObjectFactory.WEIGHT_RANDOM.getRule());

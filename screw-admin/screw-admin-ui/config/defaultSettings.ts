@@ -16,7 +16,7 @@ const proSettings: DefaultSettings = {
   menu: {
     locale: false,
   },
-  title: '外勤管理工具',
+  title: '服务治理工具',
   pwa: false,
   iconfontUrl: '',
 };

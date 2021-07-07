@@ -1,7 +1,9 @@
 package com.jw.screw.common.transport.body;
 
-
 import com.jw.screw.common.metadata.RegisterMetadata;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 下线body
@@ -9,19 +11,11 @@ import com.jw.screw.common.metadata.RegisterMetadata;
  * @date 2020/12/10 17:30
  * @since 1.0
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OfflineBody implements Body {
 
     private RegisterMetadata registerMetadata;
 
-    public OfflineBody(RegisterMetadata registerMetadata) {
-        this.registerMetadata = registerMetadata;
-    }
-
-    public RegisterMetadata getRegisterMetadata() {
-        return registerMetadata;
-    }
-
-    public void setRegisterMetadata(RegisterMetadata registerMetadata) {
-        this.registerMetadata = registerMetadata;
-    }
 }

@@ -2,6 +2,12 @@ package com.jw.screw.spring;
 
 import java.util.List;
 
+/**
+ * rpc 调用编织类，用于统一服务包调用
+ * @author jiangw
+ * @date 2021/1/9 17:08
+ * @since 1.0
+ */
 public class ConsumerWrapper {
 
     private String registryAddress;

@@ -1,5 +1,6 @@
 package com.jw.screw.spring;
 
+import com.jw.screw.spring.properties.DefaultPropertiesHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -33,7 +34,14 @@ public class NullablePropertySourceFactory implements PropertySourceFactory {
             }
         } catch (FileNotFoundException e) {
             logger.warn("create {} properties wrong, because: {}", name, e.getMessage());
-            propertySource = new PropertiesPropertySource("null", new Properties());
+            DefaultPropertiesHandler handler = new DefaultPropertiesHandler();
+            Properties properties = handler.setProperties(e.getMessage()).handle();
+            if (properties == null) {
+                propertySource = new PropertiesPropertySource("null", new Properties());
+            } else {
+                logger.info("get default properties is: {}", properties.toString());
+                propertySource = new PropertiesPropertySource(name, properties);
+            }
         }
         return propertySource;
     }

@@ -37,7 +37,7 @@ public interface AppServerService {
     /**
      * 查询所有的应用服务
      */
-    List<AppServerVO> queryAppServers();
+    List<AppServerVO> queryAppServers() throws IllegalAccessException, InstantiationException;
 
     /**
      * 查询server根据code
@@ -48,7 +48,7 @@ public interface AppServerService {
      * 根据id删除应用服务，需级联删除配置，配置版本、配置数据
      * @return
      */
-    Integer deleteAppServerById(String serverId) throws BasicOperationException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
+    Integer deleteAppServerById(String serverIds) throws BasicOperationException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
 
     /**
      * 获取服务的目录

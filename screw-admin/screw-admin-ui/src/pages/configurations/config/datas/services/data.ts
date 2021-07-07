@@ -36,3 +36,14 @@ export async function deleteConfigData(params: AppConfigData[]) {
         data: params,
     });
 }
+
+/**
+ * 解析器
+ * @param params 
+ * @returns
+ */
+export async function transfer(params) {
+    return request(`/api/parser/transfer?format=${params}`, {
+        method: 'GET'
+    });
+}

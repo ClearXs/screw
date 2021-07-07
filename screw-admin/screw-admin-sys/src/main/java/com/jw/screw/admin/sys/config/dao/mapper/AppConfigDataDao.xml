@@ -36,9 +36,9 @@
 
     <select id="queryByPage" resultMap="AppConfigDataVO">
         SELECT
-            <include refid="appConfigDataColumns"/>
+        <include refid="appConfigDataColumns"/>
         FROM
-            T_APP_CONFIG_DATA cd
+        T_APP_CONFIG_DATA cd
         <where>
             <if test="queryDTO.configDataType != null and queryDTO.configDataType != ''">
                 AND cd.CONFIG_DATA_TYPE IN (#{queryDTO.configDataType})
@@ -53,7 +53,7 @@
             AND cd.DELETED != 1
         </where>
         ORDER BY
-            cd.CREATE_TIME DESC
+        cd.CREATE_TIME DESC
     </select>
 
     <select id="isExist" resultType="java.lang.Integer">

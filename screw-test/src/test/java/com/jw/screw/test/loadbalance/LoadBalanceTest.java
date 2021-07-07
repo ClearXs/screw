@@ -7,7 +7,7 @@ import com.jw.screw.common.future.InvokeFuture;
 import com.jw.screw.common.future.InvokeFutureContext;
 import com.jw.screw.common.metadata.ServiceMetadata;
 import com.jw.screw.common.transport.RemoteAddress;
-import com.jw.screw.consumer.ConnectWatch;
+import com.jw.screw.consumer.ConnectionWatcher;
 import com.jw.screw.consumer.NettyConsumer;
 import com.jw.screw.consumer.model.ProxyObjectFactory;
 import com.jw.screw.provider.NettyProvider;
@@ -30,9 +30,9 @@ public class LoadBalanceTest {
     }
 
     @Test
-    public void provider1() throws InterruptedException {
+    public void provider1() throws InterruptedException, ConnectionException, ExecutionException {
         NettyProviderConfig providerConfig = new NettyProviderConfig();
-        providerConfig.setProviderKey("demo");
+        providerConfig.setServerKey("demo");
         providerConfig.setWeight(3);
         providerConfig.setPort(8081);
         NettyProvider nettyProvider = new NettyProvider(providerConfig);
@@ -45,9 +45,9 @@ public class LoadBalanceTest {
     }
 
     @Test
-    public void provider2() throws InterruptedException {
+    public void provider2() throws InterruptedException, ConnectionException, ExecutionException {
         NettyProviderConfig providerConfig = new NettyProviderConfig();
-        providerConfig.setProviderKey("demo");
+        providerConfig.setServerKey("demo");
         providerConfig.setWeight(4);
         providerConfig.setPort(8082);
         NettyProvider nettyProvider = new NettyProvider(providerConfig);
@@ -68,21 +68,21 @@ public class LoadBalanceTest {
                 NettyConsumer nettyConsumer = new NettyConsumer();
                 nettyConsumer.register("localhost", 8080);
                 try {
-                    nettyConsumer.start();
-                } catch (InterruptedException e) {
+                    nettyConsumer.start(null);
+                } catch (InterruptedException | ConnectionException | ExecutionException e) {
                     e.printStackTrace();
                 }
                 ServiceMetadata metadata = new ServiceMetadata("demo");
-                ConnectWatch connectWatch = null;
+                ConnectionWatcher connectionWatcher = null;
                 try {
-                    connectWatch = nettyConsumer.watchConnect(metadata);
+                    connectionWatcher = nettyConsumer.watchConnect(metadata);
                 } catch (InterruptedException | ConnectionException e) {
                     e.printStackTrace();
                 }
                 DemoService o = ProxyObjectFactory
                         .factory()
                         .consumer(nettyConsumer)
-                        .connectWatch(connectWatch)
+                        .connectWatch(connectionWatcher)
                         .metadata(metadata)
                         .newProxyInstance(DemoService.class);
                 String hello = o.hello("2");
@@ -95,15 +95,19 @@ public class LoadBalanceTest {
 
     @Test
     public void asyncTest() throws ConnectionException, InterruptedException, ExecutionException {
-        NettyConsumer nettyConsumer = new NettyConsumer();
-        ServiceMetadata metadata = new ServiceMetadata("demo");
 
-        nettyConsumer.directService(metadata, "localhost", 8081);
+        NettyConsumer nettyConsumer = new NettyConsumer();
+        nettyConsumer.register("localhost", 8080);
+        ServiceMetadata metadata = new ServiceMetadata("demo");
+        nettyConsumer.start(null);
+        ConnectionWatcher connectionWatcher = nettyConsumer.watchConnect(metadata);
+//        nettyConsumer.directService(metadata, "localhost", 8081);
         DemoService o = ProxyObjectFactory
                 .factory()
                 .consumer(nettyConsumer)
                 .metadata(metadata)
                 .isAsync(true)
+                .connectWatch(connectionWatcher)
                 .newProxyInstance(DemoService.class);
         o.hello("21");
         final InvokeFuture<String> future;
@@ -155,7 +159,7 @@ public class LoadBalanceTest {
                                 }
                             }
                         });
-                    } catch (InterruptedException | ConnectionException | InvokeFutureException e) {
+                    } catch (InterruptedException | ConnectionException | InvokeFutureException | ExecutionException e) {
                         e.printStackTrace();
                     }
                 }

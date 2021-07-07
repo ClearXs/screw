@@ -4,7 +4,7 @@ import com.jw.screw.common.util.Collections;
 import org.junit.Test;
 
 import java.util.*;
-
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class CollectionTest {
 
@@ -47,5 +47,14 @@ public class CollectionTest {
         Collection<String> filter = Collections.filter(strings1, s1, s3);
         System.out.println(filter);
 
+    }
+
+    @Test
+    public void testCopyOnWriteSet() {
+        CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>();
+        strings.add("2");
+        boolean add = strings.add("2");
+        int size = strings.size();
+        System.out.println(size);
     }
 }

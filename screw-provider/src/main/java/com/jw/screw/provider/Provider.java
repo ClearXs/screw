@@ -1,7 +1,10 @@
 package com.jw.screw.provider;
 
 
+import com.jw.screw.common.exception.ConnectionException;
 import com.jw.screw.common.transport.UnresolvedAddress;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * 服务提供者的公共接口
@@ -17,11 +20,14 @@ public interface Provider {
      * 2.作为客户端，响应注册中心的检测
      * 3.启动时，启动客户端与服务端。
      * 4.把自身的rpc服务注册到注册中修改
+     * @throws InterruptedException 线程中断异常
+     * @throws ConnectionException 连接异常
      */
-    void start() throws InterruptedException;
+    void start() throws InterruptedException, ConnectionException, ExecutionException;
 
     /**
      * 停止开启的服务
+     * @throws InterruptedException 线程中断异常
      */
     void shutdown() throws InterruptedException;
 
@@ -34,20 +40,21 @@ public interface Provider {
 
     /**
      * 发布的相关服务
-     * @param services
+     * @param services {@link Object} 服务实例
      */
     void publishServices(Object...services);
 
     /**
-     * @param host
-     * @param port
+     * 初始化注册中心相关配置
+     * @see #registry(UnresolvedAddress)
+     * @param host ip
+     * @param port port
      */
     void registry(String host, int port);
 
     /**
-     * 连接到注册中心
+     * 初始化注册中心相关配置
+     * @param registryAddress {@link UnresolvedAddress}注册中心地址
      */
     void registry(UnresolvedAddress registryAddress);
-
-
 }

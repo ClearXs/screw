@@ -22,8 +22,8 @@ public abstract class AbstractRpcRequestProcessor implements NettyProcessor {
 
     /**
      * rpc调用生成结果核心方法
-     * @param serviceWrapper
-     * @return
+     * @param serviceWrapper {@link ServiceWrapper}
+     * @return {@link Object}
      */
     protected Object rpcInvokeGenerate(ServiceWrapper serviceWrapper, String methodName, Object[] parameters) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         List<ServiceWrapper.MethodWrapper> methodWrappers = serviceWrapper.getMethodWrappers();

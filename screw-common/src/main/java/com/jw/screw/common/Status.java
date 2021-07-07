@@ -15,7 +15,12 @@ public enum Status {
     /**
      * 服务未找到
      */
-    SERVICE_NOT_FOUND((byte) 0x40, "service not found");
+    SERVICE_NOT_FOUND((byte) 0x40, "service not found"),
+
+    /**
+     * 服务调用访问错误
+     */
+    SERVICE_ILLEGAL_ACCESS((byte) 0x41, "service illegal access");
 
     private final byte value;
 

@@ -35,9 +35,9 @@ public interface AppConfigService {
      * 逻辑删除配置
      * 1.级联删除版本信息
      * 2.级联删除版本数据
-     * @param configId
+     * @param configIds
      */
-    Integer deleteAppConfig(String configId) throws BasicOperationException;
+    Integer deleteAppConfig(String configIds) throws BasicOperationException;
 
     /**
      * 物理删除配置

@@ -1,14 +1,14 @@
 package com.jw.screw.spring;
 
 import com.jw.screw.common.NamedThreadFactory;
+import com.jw.screw.common.SystemConfig;
 import com.jw.screw.registry.DefaultRegistry;
 import com.jw.screw.registry.Registry;
 import com.jw.screw.spring.anntation.ScrewValue;
+import com.jw.screw.spring.config.Property;
+import com.jw.screw.spring.config.TypePropertySource;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/12/9 14:09
  * @since 1.0
  */
-public class ScrewSpringRegistry implements InitializingBean, ApplicationContextAware, DisposableBean {
+public class ScrewSpringRegistry implements ScrewSpring {
 
     @ScrewValue("registry-registry.port")
-    private int registryPort;
+    private Integer registryPort;
 
     private Registry registry;
 
@@ -37,6 +37,12 @@ public class ScrewSpringRegistry implements InitializingBean, ApplicationContext
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        if (registryPort == null) {
+            registryPort = SystemConfig.REGISTRY_CENTER.getDefaultPort();
+        }
+        if (registryPort == null) {
+            throw new NullPointerException("registry port is null");
+        }
         registry = new DefaultRegistry(registryPort);
         registryExecutor.submit(new Runnable() {
             @Override
@@ -64,8 +70,19 @@ public class ScrewSpringRegistry implements InitializingBean, ApplicationContext
 
     @Override
     public void destroy() throws Exception {
-        registry.shutdown();
+        if (registry != null) {
+            registry.shutdown();
+        }
         registryExecutor.shutdownNow();
     }
 
+    @Override
+    public void initConfig() {
+
+    }
+
+    @Override
+    public void validateParams() {
+
+    }
 }

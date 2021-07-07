@@ -2,10 +2,10 @@ import { connect, Dispatch } from 'umi';
 import React, { useState, useEffect, useRef } from 'react';
 import { PageHeaderWrapper } from '@ant-design/pro-layout';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
-import Field, { ProFieldFCMode } from '@ant-design/pro-field';
+import Field from '@ant-design/pro-field';
 import { ModalForm } from '@ant-design/pro-form';
-import ProCard, { ProCardTabsProps } from '@ant-design/pro-card';
-import { Spin, Button, Descriptions, Modal, Menu, message, Result } from 'antd';
+import ProCard from '@ant-design/pro-card';
+import { Spin, Button, Modal, Menu, message, Result, Popover } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import ConfigForm from '@/pages/configurations/config/components/ConfigFrom';
 import ConfigVersion from '@/pages/configurations/config/version/index';
@@ -53,15 +53,11 @@ const Config: React.FC<ConfigProps> = ( props ) => {
 
     const [isConfigFormVisible, setIsConfigFormVisible] = useState<boolean>(false);
 
-    const [state] = useState<ProFieldFCMode>('read');
-    
     const [plain] = useState<boolean>(false);
 
-    const [tab, setTab] = useState('tab1');
-
-    const [tabPosition] = useState<ProCardTabsProps['tabPosition']>('top');
-
     const [isInitData, setIsInitData] = useState<boolean>(false);
+
+    const [selectedConfigs, setSelectedConfigs] = useState<AppConfig[]>();
 
     const configDataRef = useRef<any>();
 
@@ -82,50 +78,40 @@ const Config: React.FC<ConfigProps> = ( props ) => {
             dataIndex: 'configKey',
             search: false,
         },
-        {
-            title: '配置数据',
-            dataIndex: 'configJson',
-            search: false,
-            render: (_, record) => {
-                return (
-                    <a onClick={() => {
-                        Modal.info({
-                            title: `[${record.configName}-json数据]`,
-                            content: (
-                                <Descriptions>
-                                    <Descriptions.Item>
-                                        <Field
-                                            text={record.configJson && record.configJson} 
-                                            valueType="jsonCode"
-                                            mode={state}
-                                            plain={plain}
-                                        />
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            ),
-                            okText: '返回'
-                        })
-                    }}>查看</a>
-                )
-            }
-        },
-        {
-            title: '配置名称',
-            dataIndex: 'configName',
-            search: false,
-        },
-        {
-            title: '应用服务名称',
-            dataIndex: 'appServer',
-            search: false,
-            render: (element: any) => {
-                if (element.hasOwnProperty('serverName')) {
-                    return element.serverName;
-                } else {
-                    return '当前配置不属于任何服务！';
-                }
-            }
-        },
+        // {
+        //     title: '配置数据',
+        //     dataIndex: 'configJson',
+        //     search: false,
+        //     render: (_, record) => {
+        //         return (
+        //             <Tooltip title={
+        //                 <Descriptions>
+        //                     <Descriptions.Item>
+        //                         <Field
+        //                             text={record.configJson && record.configJson}
+        //                             valueType="jsonCode"
+        //                             plain={plain}
+        //                         />
+        //                     </Descriptions.Item>
+        //                 </Descriptions>
+        //             } color="#F6F8FA">
+        //                 <a style={{cursor: 'default'}}>查看</a>
+        //             </Tooltip>
+        //         )
+        //     }
+        // },
+        // {
+        //     title: '应用服务名称',
+        //     dataIndex: 'appServer',
+        //     search: false,
+        //     render: (element: any) => {
+        //         if (element.hasOwnProperty('serverName')) {
+        //             return element.serverName;
+        //         } else {
+        //             return '当前配置不属于任何服务！';
+        //         }
+        //     }
+        // },
         {
             title: '版本号',
             dataIndex: 'appConfigVersion',
@@ -136,7 +122,7 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                 } else {
                     return '当前配置还未发布版本!';
                 }
-            }
+            },
         },
         {
             title: '创建时间',
@@ -163,67 +149,56 @@ const Config: React.FC<ConfigProps> = ( props ) => {
             key: 'option',
             valueType: 'option',
             render: (text, row, index, action) => [
-                <div className={style.version}>
-                    <ModalForm
-                        title={`${row.configName}版本`}
-                        modalProps={{
-                            footer: [
-                            ]
-                        }}
-                        trigger={<a key="version" onClick={(event) => {
-                            event.stopPropagation()
-                            setIsInitVersion(true);
-                            const newData = appConfigs.map((value, dataIndex) => {
-                                if (dataIndex === index) {
-                                    value.isVersionModal = true;
-                                }
-                                return value;
-                            });
-                            props.dispatch({
-                                type: 'appConfig/changeConfig',
-                                payload: newData,
-                                callback: (data) => {
-                                    setAppConfigs(data);
-                                }
-                            });
-                        }}>版本</a>}
-                        width={1420}
-                        onVisibleChange={(visible: boolean) => {
-                            setIsInitVersion(visible);
-                            if (!visible) {
-                                setIsLoading(true);
-                                setIsQuery(true);
+                <ModalForm
+                    className={style.version}
+                    title={`${row.configName}版本`}
+                    trigger={<a key="version" onClick={(event) => {
+                        event.stopPropagation();
+                    }}>版本</a>}
+                    width={1000}
+                    onVisibleChange={(visible: boolean) => {
+                        setIsInitVersion(visible);
+                        if (!visible) {
+                            setIsLoading(true);
+                            setIsQuery(true);
+                        }
+                        const newData = appConfigs.map((value, dataIndex) => {
+                            if (dataIndex === index) {
+                                value.isVersionModal = visible;
                             }
-                            const newData = appConfigs.map((value, dataIndex) => {
-                                if (dataIndex === index) {
-                                    value.isVersionModal = false;
-                                }
-                                return value;
-                            });
-                            props.dispatch({
-                                type: 'appConfig/changeConfig',
-                                payload: newData,
-                                callback: (data) => {
-                                    setAppConfigs(data);
-                                }
-                            });
-                        }}
-                        visible={row.isVersionModal}
-                    >
-                        {(isInitVersion && row.isVersionModal) && (
-                            <ConfigVersion 
-                                appConfig={row} 
-                                isInit = {isInitVersion}
-                            />
-                        )}
-                    </ModalForm>
-                </div>,
+                            return value;
+                        });
+                        props.dispatch({
+                            type: 'appConfig/changeConfig',
+                            payload: newData,
+                            callback: (data) => {
+                                setAppConfigs(data);
+                            }
+                        });
+                    }}
+                    visible={row.isVersionModal}
+                >
+                    {(isInitVersion && row.isVersionModal) && (
+                        <ConfigVersion
+                            appConfig={row}
+                            isInit={isInitVersion}
+                        />
+                    )}
+                </ModalForm>,
                 <ModalForm
                     title="编辑配置文件"
-                    width={900}
+                    width={1000}
                     onFinish={async (value: any) => {
+                        if (event.type === 'keypress' && event.keyCode === 13) {
+                            return false;
+                        }
                         let isFinish = true;
                         if (configDataRef.current) {
+                            isFinish = await configDataRef.current.checkedSaveStatus();
+                            if (!isFinish) {
+                                message.warn('点击完毕，进行数据保存');
+                                return isFinish;
+                            }
                             isFinish = await configDataRef.current.saveTemp();
                         }
                         if (isFinish) {
@@ -231,27 +206,15 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                                 row[key] = value[key];
                             }
                             isFinish = await configFormSubmit(row, 'EDIT');
-                        } else {
-                            message.error('保存数据出错');
                         }
                         return isFinish;
+                    }}
+                    modalProps={{
+                        keyboard: false,
                     }}
                     trigger={
                         <a onClick={(event) => {
                             event.stopPropagation();
-                            const newData = appConfigs.map((value, dataIndex) => {
-                                if (dataIndex === index) {
-                                    value.isConfigModal = true;
-                                }
-                                return value;
-                            });
-                            props.dispatch({
-                                type: 'appConfig/changeConfig',
-                                payload: newData,
-                                callback: (data) => {
-                                    setAppConfigs(data);
-                                }
-                            });
                         }}>
                             编辑
                         </a>
@@ -260,7 +223,7 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                         setIsInitVersion(visible);
                         const newData = appConfigs.map((value, dataIndex) => {
                             if (dataIndex === index) {
-                                value.isConfigModal = false;
+                                value.isConfigModal = visible;
                             }
                             return value;
                         });
@@ -275,50 +238,43 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                     visible={row.isConfigModal}
                 >
                     {
-                        row.isConfigModal 
-                        && 
+                        row.isConfigModal
+                        &&
                         <div>
-                            <ProCard
-                                tabs={{
-                                    tabPosition,
-                                    activeKey: tab,
-                                    onChange: (key) => {
-                                        setTab(key);
-                                        if (key === 'tab2') {
-                                            setIsInitData(true);
-                                        } else {
-                                            setIsInitData(false);
-                                        }
-                                    },
-                                }}
-                            >
-                                <ProCard.TabPane key="tab1" tab="修改配置文件">
-                                    <ConfigForm appConfig={row} />
-                                </ProCard.TabPane>
-                                <ProCard.TabPane key="tab2" tab="修改配置数据">
-                                    {renderConfigData(row)}
-                                </ProCard.TabPane>
+                            <ProCard>
+                                <ConfigForm appConfig={row} />
+                                {renderConfigData(row)}
                             </ProCard>
                         </div>
                     }
                 </ModalForm>,
                 <a key="delete" onClick={() => {
                     confirm({
-                        title: '确认删除当前服务?',
+                        title: '确认删除当前配置?',
                         icon: <ExclamationCircleOutlined />,
                         okText: '确认',
                         okType: 'danger',
                         cancelText: '取消',
                         onOk() {
-                            deleteConfig(row);
+                            const appConfig = new Array();
+                            appConfig.push(row);
+                            deleteConfig(appConfig);
                         },
                     });
-                }}>删除</a>
+                }}>删除</a>,
+                <Popover title={row.configName} color="#F6F8FA" content={(
+                    <Field
+                        text={row.configJson && row.configJson}
+                        valueType="jsonCode"
+                        plain={plain}
+                    />
+                )} style={{width: '50%'}}>
+                    <a style={{cursor: 'default'}}>详情</a>
+                </Popover>
             ],
         }
     ]
 
-    
     const handlerQuery = () => {
         setIsLoading(true);
         const queryParams: AppConfigQueryParams = {
@@ -347,11 +303,12 @@ const Config: React.FC<ConfigProps> = ( props ) => {
     }
 
     const renderConfigData = (row: AppConfig): React.ReactNode => {
-        if (row.appConfigVersion) {
+        setIsInitData(true);
+        if (row.appConfigVersion && isInitData) {
             return (
-                <ConfigData 
+                <ConfigData
                     appVersion={row.appConfigVersion}
-                    isInit={isInitData} 
+                    isInit={isInitData}
                     configDataRef={configDataRef}
                     hiddenButtons={true}
                 />
@@ -383,6 +340,9 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                         }
                     } else if (!_.isEmpty(data)) {
                         for (let key in data) {
+                            if (data[key].length === 0) {
+                                continue;
+                            }
                             const id = data[key][0].id
                             keys.push(id)
                             break;
@@ -392,14 +352,19 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                     setIsQuery(true);
                 }
             }
-        })
+        });
     }
 
-    const deleteConfig = (record: AppConfig) => {
+    const deleteConfig = (records: AppConfig[]) => {
+        if (_.isEmpty(records)) {
+            return;
+        }
         setIsLoading(true);
         props.dispatch({
             type: 'appConfig/deleteConfig',
-            payload: {configId: record.id},
+            payload: {configIds: records.map((value: AppConfig) => {
+                return value.id;
+            }).join()},
             callback: (result) => {
                 const { success, msg } = result;
                 if (success) {
@@ -410,7 +375,7 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                     setIsLoading(false);
                 }
             }
-        })
+        });
     }
 
     const configFormSubmit = (params: any, operate: string): Promise<boolean> => {
@@ -526,6 +491,7 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                                     setIsLoading(true);
                                     setIsQuery(true);
                                     setSelectKeys(item.selectedKeys);
+                                    setSelectedConfigs([]);
                                 }}
                             >
                                 {
@@ -561,20 +527,49 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                         setUpdateTime([]);
                         setIsQuery(true);
                     }}
+                    rowSelection={{
+                        onChange: (selectedKeys, selectedRow) => {
+                            setSelectedConfigs(selectedRow);
+                        },
+                    }}
+                    tableAlertRender={false}
+                    tableAlertOptionRender={false}
+                    rowKey="id"
+                    options={false}
                     toolBarRender={() => [
                         <ModalForm
                             title="新增配置文件"
+                            width={1000}
                             onFinish={async (value: any) => {
                                 const isFinish = await configFormSubmit(value, 'ADD');
                                 return isFinish;
                             }}
                             trigger={
-                                <Button type="primary" key="primary" onClick={(event) => {
-                                    event.stopPropagation();
-                                    setIsConfigFormVisible(true);
-                                }}>
-                                    创建配置文件
-                                </Button>
+                                <div>
+                                    <Button type="primary" key="primary" size="middle" style={{marginRight: '5px'}} onClick={(event) => {
+                                        event.stopPropagation();
+                                        setIsConfigFormVisible(true);
+                                    }}>
+                                        创建配置文件
+                                    </Button>
+                                    <Button type="default" size="middle" onClick={(event) => {
+                                        event.stopPropagation();
+                                        if (_.isEmpty(selectedConfigs)) {
+                                            message.warn('当前未选择数据!');
+                                        } else {
+                                            confirm({
+                                                title: `确认删除${selectedConfigs.length}条当前配置?`,
+                                                icon: <ExclamationCircleOutlined />,
+                                                okText: '确认',
+                                                okType: 'danger',
+                                                cancelText: '取消',
+                                                onOk() {
+                                                    deleteConfig(selectedConfigs);
+                                                },
+                                            });
+                                        }
+                                    }}>批量删除</Button>
+                                </div>
                             }
                             onVisibleChange={(visible: boolean) => {
                                 if (!visible) {
@@ -585,7 +580,7 @@ const Config: React.FC<ConfigProps> = ( props ) => {
                         >
                             {isConfigFormVisible && <ConfigForm />}
                         </ModalForm>
-                    ]}                
+                    ]}
                 />
             </PageHeaderWrapper>
         </Spin>

@@ -28,7 +28,7 @@ spring:
 #      initial-size: 5
 #      max-active: 10
 #      min-idle: 5
-#      username: c##HBP
+#      username: ROOT
 #      password: 123456
 #      url: jdbc:oracle:thin:@localhost:1521:orcl
 

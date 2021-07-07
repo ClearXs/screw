@@ -18,9 +18,24 @@ public abstract class AbstractInvokeFuture<V> implements InvokeFuture<V> {
 
     private final AtomicInteger state = new AtomicInteger();
 
+    /**
+     * @see FutureTask#NEW
+     */
     private final static int NEW = 0;
+
+    /**
+     * @see FutureTask#CANCELLED
+     */
     private final static int COMPLETED = 1;
-    private final static int THROWABLE = 2;
+
+    /**
+     * @see FutureTask#EXCEPTIONAL
+     */
+    private final static int EXCEPTIONAL = 2;
+
+    /**
+     * @see FutureTask#INTERRUPTED
+     */
     private final static int INTERRUPTED = 3;
 
     private V result;
@@ -40,6 +55,13 @@ public abstract class AbstractInvokeFuture<V> implements InvokeFuture<V> {
 
     public AbstractInvokeFuture() {
         state.set(NEW);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                taskExecutor.shutdown();
+            }
+        }));
     }
 
     @Override
@@ -90,7 +112,7 @@ public abstract class AbstractInvokeFuture<V> implements InvokeFuture<V> {
             state.set(COMPLETED);
             setResult(call);
         } catch (Exception e) {
-            state.set(THROWABLE);
+            state.set(EXCEPTIONAL);
             throwable = e;
         } finally {
             wait.signalAll();
@@ -148,12 +170,6 @@ public abstract class AbstractInvokeFuture<V> implements InvokeFuture<V> {
     @Override
     public InvokeFuture<V> removeListeners(FutureListener<V>... listeners) {
         return this;
-    }
-
-
-    @Override
-    protected void finalize() throws Throwable {
-        taskExecutor.shutdownNow();
     }
 
     @Override

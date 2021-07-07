@@ -6,6 +6,7 @@ import com.jw.screw.admin.common.EntityFactoryBuilder;
 import com.jw.screw.admin.common.JSONHelper;
 import com.jw.screw.admin.common.PageFactoryBuilder;
 import com.jw.screw.admin.common.constant.DataOperationState;
+import com.jw.screw.admin.common.constant.StringPool;
 import com.jw.screw.admin.common.exception.BasicOperationException;
 import com.jw.screw.admin.common.model.PageResult;
 import com.jw.screw.admin.common.validate.Validators;
@@ -44,9 +45,6 @@ public class AppConfigServiceImpl implements AppConfigService {
 
     @Resource
     private AppConfigDataDao appConfigDataDao;
-
-    @Resource
-    private AppServerDao appServerDao;
 
     @Override
     public PageResult<AppConfigVO> queryAppConfigs(AppConfigQueryDTO queryDTO) throws InstantiationException, IllegalAccessException {
@@ -93,23 +91,26 @@ public class AppConfigServiceImpl implements AppConfigService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Integer deleteAppConfig(String configId) throws BasicOperationException {
+    public Integer deleteAppConfig(String configIds) throws BasicOperationException {
         // 1.逻辑删除版本信息
         // 找到所有的与此配置有关的版本
-        List<AppConfigVersion> versions = appConfigVersionDao.selectList(new QueryWrapper<AppConfigVersion>().eq("CONFIG_ID", configId));
-        if (!CollectionUtils.isEmpty(versions)) {
-            for (AppConfigVersion version : versions) {
-                // 找到与此版本关联的配置数据
-                List<AppConfigData> configDataList = appConfigDataDao.selectList(new QueryWrapper<AppConfigData>().eq("CONFIG_VERSION_ID", version.getId()));
-                if (!CollectionUtils.isEmpty(configDataList)) {
-                    for (AppConfigData configData : configDataList) {
-                        Validators.doResult(appConfigDataDao.deleteById(configData.getId()));
+        String[] configIdArray = configIds.split(StringPool.COMMA);
+        for (String configId : configIdArray) {
+            List<AppConfigVersion> versions = appConfigVersionDao.selectList(new QueryWrapper<AppConfigVersion>().eq("CONFIG_ID", configId));
+            if (!CollectionUtils.isEmpty(versions)) {
+                for (AppConfigVersion version : versions) {
+                    // 找到与此版本关联的配置数据
+                    List<AppConfigData> configDataList = appConfigDataDao.selectList(new QueryWrapper<AppConfigData>().eq("CONFIG_VERSION_ID", version.getId()));
+                    if (!CollectionUtils.isEmpty(configDataList)) {
+                        for (AppConfigData configData : configDataList) {
+                            Validators.doResult(appConfigDataDao.deleteById(configData.getId()));
+                        }
                     }
+                    Validators.doResult(appConfigVersionDao.deleteById(version.getId()));
                 }
-                Validators.doResult(appConfigVersionDao.deleteById(version.getId()));
             }
+            Validators.doResult(appConfigDao.deleteById(configId));
         }
-        Validators.doResult(appConfigDao.deleteById(configId));
         return DataOperationState.SUCCESSFUL;
     }
 
@@ -152,6 +153,9 @@ public class AppConfigServiceImpl implements AppConfigService {
     public List<AppConfigVO> queryConfigByServerId(String serverId) throws IllegalAccessException, InstantiationException {
         List<AppConfig> appConfigs = appConfigDao.selectList(new QueryWrapper<AppConfig>()
                 .eq("SERVER_ID", serverId));
+        if (CollectionUtils.isEmpty(appConfigs)) {
+            return null;
+        }
         return new EntityFactoryBuilder<AppConfigVO>()
                 .setEntityClass(AppConfigVO.class)
                 .build(appConfigs.toArray());

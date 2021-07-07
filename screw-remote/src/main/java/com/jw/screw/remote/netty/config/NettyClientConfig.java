@@ -1,7 +1,6 @@
 package com.jw.screw.remote.netty.config;
 
 import com.jw.screw.common.transport.UnresolvedAddress;
-import com.jw.screw.remote.SConfig;
 
 /**
  * netty-Client的一些配置项
@@ -11,7 +10,7 @@ import com.jw.screw.remote.SConfig;
  * @date 2020/11/26 9:30
  * @since 1.0
  */
-public class NettyClientConfig implements SConfig {
+public class NettyClientConfig {
 
     private UnresolvedAddress defaultAddress;
 

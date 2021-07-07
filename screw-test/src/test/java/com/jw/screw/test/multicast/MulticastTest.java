@@ -7,7 +7,7 @@ import com.jw.screw.common.future.InvokeFuture;
 import com.jw.screw.common.future.InvokeFutureContext;
 import com.jw.screw.common.metadata.ServiceMetadata;
 import com.jw.screw.common.transport.RemoteAddress;
-import com.jw.screw.consumer.ConnectWatch;
+import com.jw.screw.consumer.ConnectionWatcher;
 import com.jw.screw.consumer.Listeners;
 import com.jw.screw.consumer.NettyConsumer;
 import com.jw.screw.consumer.RepeatableFuture;
@@ -35,7 +35,7 @@ public class MulticastTest {
     @Test
     public void provider1() throws InterruptedException, NoSuchMethodException, ConnectionException {
         NettyProviderConfig providerConfig = new NettyProviderConfig();
-        providerConfig.setProviderKey("demo");
+        providerConfig.setServerKey("demo");
         providerConfig.setWeight(4);
         providerConfig.setPort(8082);
         DemoServiceImpl demoService = new DemoServiceImpl();
@@ -48,7 +48,7 @@ public class MulticastTest {
             public void run() {
                 try {
                     nettyProvider.start();
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | ConnectionException | ExecutionException e) {
                     e.printStackTrace();
                 }
             }
@@ -72,14 +72,14 @@ public class MulticastTest {
         NettyConsumer nettyConsumer = new NettyConsumer();
         ServiceMetadata metadata = new ServiceMetadata("demo");
         nettyConsumer.register("localhost", 8080);
-        nettyConsumer.start();
-        ConnectWatch connectWatch = nettyConsumer.watchConnect(metadata);
+        nettyConsumer.start(null);
+        ConnectionWatcher connectionWatcher = nettyConsumer.watchConnect(metadata);
         DemoService o = ProxyObjectFactory
                 .factory()
                 .consumer(nettyConsumer)
                 .metadata(metadata)
                 .isAsync(true)
-                .connectWatch(connectWatch)
+                .connectWatch(connectionWatcher)
                 .newProxyInstance(DemoService.class);
         o.hello("21");
         final InvokeFuture<String> future;
@@ -117,7 +117,7 @@ public class MulticastTest {
                 .consumer(nettyConsumer)
                 .metadata(metadata)
                 .isAsync(true)
-                .connectWatch(connectWatch)
+                .connectWatch(connectionWatcher)
                 .remoteInvoke("DemoService", "hello", new Object[]{"232321"});
         InvokeFuture<String> objectFuture = InvokeFutureContext.get(String.class);
         objectFuture.addListener(new FutureListener<String>() {
