@@ -59,12 +59,11 @@ public class ConfigController extends BaseController {
             configDTO.setServerPort(serverVO.getServerPort());
             configDTO.setServerVersion(serverVO.getServerVersion());
             // 2.数据源信息
-            DatasourceVO datasourceVO = serverVO.getDatasourceVO();
+            List<DatasourceVO> datasourceVO = serverVO.getDatasourceVO();
             if (!ObjectUtils.isEmpty(datasourceVO)) {
-                DatasourceModel datasourceModel = new EntityFactoryBuilder<DatasourceModel>()
+                List<DatasourceModel> datasourceModel = new EntityFactoryBuilder<DatasourceModel>()
                         .setEntityClass(DatasourceModel.class)
-                        .setVo(datasourceVO)
-                        .build();
+                        .build(datasourceVO.toArray());
                 configDTO.setDatasourceModel(datasourceModel);
             }
             List<AppConfigVO> appConfigVOS;

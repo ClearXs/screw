@@ -24,13 +24,9 @@ public class NettyProviderRequestDispatcher implements NettyProcessor {
     @Override
     public RemoteTransporter process(ChannelHandlerContext ctx, RemoteTransporter request) {
         byte code = request.getCode();
-
-        switch (code) {
-            // 处理rpc请求
-            case Protocol.Code.RPC_REQUEST:
-                return rpcRequestProcessor.process(ctx, request);
-            default:
-                break;
+        // 处理rpc请求
+        if (code == Protocol.Code.RPC_REQUEST) {
+            return rpcRequestProcessor.process(ctx, request);
         }
         return null;
     }

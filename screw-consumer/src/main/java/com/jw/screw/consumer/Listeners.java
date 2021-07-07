@@ -92,14 +92,13 @@ public class Listeners {
     /**
      * 取消观测
      */
-    public static boolean unWatch(RepeatableFuture<?> future) {
-        future.stop();
-        return FUTURE_GROUP.remove(future);
+    public static void unWatch() {
+        FUTURE_GROUP.clear();
     }
 
     /**
      * 通知与monitor一致的watcher
-     * @param monitorBody
+     * @param monitorBody {@link MonitorBody}
      * @throws ClassNotFoundException
      */
     public static void notifyFuture(final MonitorBody monitorBody) throws ClassNotFoundException {
@@ -109,7 +108,7 @@ public class Listeners {
             try {
                 targetClass = Class.forName(monitorBody.getServiceName());
             } catch (ClassNotFoundException e) {
-                logger.warn("can't create class: {}", monitorBody.getServiceName());
+                logger.debug("can't create class: {}", monitorBody.getServiceName());
             }
             String serviceName = targetClass == null ? monitorBody.getServiceName()
                     : targetClass.getSimpleName();

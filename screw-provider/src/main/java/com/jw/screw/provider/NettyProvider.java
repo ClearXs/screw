@@ -1,5 +1,6 @@
 package com.jw.screw.provider;
 
+import com.jw.screw.common.ConnectionCallback;
 import com.jw.screw.common.NamedThreadFactory;
 import com.jw.screw.common.config.RegisterConfig;
 import com.jw.screw.common.exception.ConnectionException;
@@ -8,6 +9,8 @@ import com.jw.screw.common.model.MessageNonAck;
 import com.jw.screw.common.transport.RemoteAddress;
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.common.transport.body.PublishBody;
+import com.jw.screw.common.util.StringUtils;
+import com.jw.screw.monitor.api.ScrewMonitor;
 import com.jw.screw.provider.model.ServiceWrapper;
 import com.jw.screw.remote.NonAckScanner;
 import com.jw.screw.remote.Protocol;
@@ -40,12 +43,12 @@ public class NettyProvider implements Provider {
     /**
      * 配置
      */
-    private final NettyProviderConfig providerConfig;
+    protected final NettyProviderConfig providerConfig;
 
     /**
      * 作为服务器端的provider，响应rpc
      */
-    private NettyServer rpcServer;
+    protected NettyServer rpcServer;
 
     /**
      * rpc调用的线程池
@@ -70,7 +73,7 @@ public class NettyProvider implements Provider {
     /**
      * provider存储的服务编织管理
      */
-    private ServiceWrapperManager serviceWrapperManager;
+    protected ServiceWrapperManager serviceWrapperManager;
 
     /**
      * 发布的服务，缓存一份到内存中
@@ -97,7 +100,15 @@ public class NettyProvider implements Provider {
      */
     private final CopyOnWriteArrayList<Object> publishCached = new CopyOnWriteArrayList<>();
 
+    /**
+     * 关闭标识
+     */
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
+
+    /**
+     * 监控器客户端
+     */
+    private ScrewMonitor monitor;
 
     public NettyProvider() {
         this(new NettyProviderConfig());
@@ -105,21 +116,21 @@ public class NettyProvider implements Provider {
 
     public NettyProvider(String providerServiceName) {
         NettyProviderConfig providerConfig = new NettyProviderConfig();
-        providerConfig.setProviderKey(providerServiceName);
+        providerConfig.setServerKey(providerServiceName);
         this.providerConfig = providerConfig;
         this.serviceMetadata = new ServiceMetadata(providerServiceName);
         initialize();
     }
 
     public NettyProvider(NettyProviderConfig providerConfig) {
-        String providerKey = providerConfig.getProviderKey();
-        if (providerKey == null || "".equals(providerKey)) {
+        String providerKey = providerConfig.getServerKey();
+        if (StringUtils.isEmpty(providerKey)) {
             try {
                 providerKey = InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
                 throw new IllegalArgumentException(e);
             }
-            providerConfig.setProviderKey(providerKey);
+            providerConfig.setServerKey(providerKey);
         }
         this.serviceMetadata = new ServiceMetadata(providerKey);
         this.providerConfig = providerConfig;
@@ -130,15 +141,16 @@ public class NettyProvider implements Provider {
         initialize();
     }
 
-    private void initialize() {
-
+    protected void initialize() {
         NettyServerConfig rpcServerConfig = providerConfig.getRpcServerConfig();
-
         if (rpcServerConfig == null) {
-            rpcServerConfig = new NettyServerConfig(providerConfig.getPort());
+            if (StringUtils.isEmpty(providerConfig.getServerHost())) {
+                rpcServerConfig = new NettyServerConfig(providerConfig.getPort());
+            } else {
+                rpcServerConfig = new NettyServerConfig(providerConfig.getServerHost(), providerConfig.getPort());
+            }
             providerConfig.setRpcServerConfig(rpcServerConfig);
         }
-
         serviceWrapperManager = new ServiceWrapperManager();
         rpcServer = new NettyServer(providerConfig.getRpcServerConfig()) {
             // 处理服务端的Ack信息
@@ -148,93 +160,104 @@ public class NettyProvider implements Provider {
             }
         };
         rpcExec = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), Integer.MAX_VALUE, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("rpc invoker"));
-
         registerExec = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>(), new NamedThreadFactory("register"));
-
         registerScheduled = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("register scheduled"));
-
         registerProcessor();
     }
 
     @Override
-    public void start() throws InterruptedException {
+    public void start() throws InterruptedException, ConnectionException, ExecutionException {
         if (logger.isInfoEnabled()) {
             logger.info("----- started provider -----");
         }
-
         // 获取需要的发布的服务
         wrappers = serviceWrapperManager.wrapperContainer().wrappers();
-
-        // 启动客户端
         if (registryClient != null) {
             registryClient.start();
-            registryConnector = registryClient.connect(new NettyChannelGroup());
-            // 连接注册中心，启动重连机制。
-            registryConnector.setReConnect(true);
-        }
-
-        // 定时发送发布服务到注册中心
-        registerExec.submit(new Runnable() {
-            @Override
-            public void run() {
-                while (!shutdown.get()) {
-                    ServiceWrapper wrapper = null;
-                    try {
-                        if (wrappers == null) {
-                            Thread.sleep(3000);
-                            wrappers = getServiceWrapperManager().wrapperContainer().wrappers();
-                        }
-                        wrapper = wrappers.take();
-                        Channel channel = registryConnector.createChannel();
-                        if (channel == null) {
-                            // 等待一段时间再次监测，是否有注册中心地址
-                            logger.error("registry address is empty!");
-                            Thread.sleep(3000);
-                            continue;
-                        }
-                        // 组装发送对象
-                        PublishBody publishBody = new PublishBody();
-                        publishBody.setPublishAddress(providerConfig.getRpcServerConfig().getRegisterAddress());
-                        publishBody.setServiceName(serviceMetadata.getServiceProviderName());
-                        publishBody.setConnCount(providerConfig.getConnCount());
-                        publishBody.setWight(providerConfig.getWeight());
-                        String serviceName = wrapper.getServiceName();
-                        publishBody.setPublishServices(serviceName);
-
-                        RemoteTransporter remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.SERVICE_REGISTER, publishBody);
-                        // 添加到NonAck中
-                        MessageNonAck messageNonAck = new MessageNonAck();
-                        messageNonAck.setUnique(remoteTransporter.getUnique());
-                        messageNonAck.setChannel(channel);
-                        messageNonAck.setBody(publishBody);
-                        nonAck.put(messageNonAck.getUnique(), messageNonAck);
-                        // 传输到注册中心
-                        channel.writeAndFlush(remoteTransporter);
-                    } catch (InterruptedException | ConnectionException e) {
-                        if (wrapper != null) {
-                            logger.warn("register service: {} error. prepare retry...", wrapper);
-                            final ServiceWrapper finalWrapper = wrapper;
-                            // 延迟后再次发送
-                            registerScheduled.schedule(new Runnable() {
-                                @Override
-                                public void run() {
-                                    wrappers.add(finalWrapper);
-                                }
-                            }, RegisterConfig.delayPublish, RegisterConfig.delayUnit);
-                        }
-                        e.printStackTrace();
+            registryClient.connect(new NettyChannelGroup(), new ConnectionCallback(null) {
+                @Override
+                public void acceptable(Object accept) throws ConnectionException {
+                    if (accept != null) {
+                        registryConnector = (SConnector) accept;
                     }
                 }
-            }
-        });
-
+            });
+        }
+        // 连接注册中心，启动重连机制。
+        registryConnector.setReConnect(true);
+        // 初始化发布空服务
+        PublishBody publishBody = new PublishBody();
+        publishBody.setPublishAddress(providerConfig.getRpcServerConfig().getRegisterAddress());
+        publishBody.setServiceName(serviceMetadata.getServiceProviderName());
+        publishBody.setConnCount(providerConfig.getConnCount());
+        publishBody.setWight(providerConfig.getWeight());
+        RemoteTransporter remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.SERVICE_REGISTER, publishBody);
+        Channel channel = registryConnector.createChannel();
+        channel.writeAndFlush(remoteTransporter);
+        // 定时发送发布服务到注册中心
+        if (registerExec != null) {
+            registerExec.submit(new Runnable() {
+                @Override
+                public void run() {
+                    while (!shutdown.get()) {
+                        ServiceWrapper wrapper = null;
+                        try {
+                            if (wrappers == null) {
+                                Thread.sleep(3000);
+                                wrappers = getServiceWrapperManager().wrapperContainer().wrappers();
+                            }
+                            wrapper = wrappers.take();
+                            Channel channel = registryConnector.createChannel();
+                            // 组装发送对象
+                            PublishBody publishBody = new PublishBody();
+                            publishBody.setPublishAddress(providerConfig.getRpcServerConfig().getRegisterAddress());
+                            publishBody.setServiceName(serviceMetadata.getServiceProviderName());
+                            publishBody.setConnCount(providerConfig.getConnCount());
+                            publishBody.setWight(providerConfig.getWeight());
+                            String serviceName = wrapper.getServiceName();
+                            publishBody.setPublishServices(serviceName);
+                            RemoteTransporter remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.SERVICE_REGISTER, publishBody);
+                            // 添加到NonAck中
+                            MessageNonAck messageNonAck = new MessageNonAck();
+                            messageNonAck.setUnique(remoteTransporter.getUnique());
+                            messageNonAck.setChannel(channel);
+                            messageNonAck.setBody(publishBody);
+                            nonAck.put(messageNonAck.getUnique(), messageNonAck);
+                            // 传输到注册中心
+                            channel.writeAndFlush(remoteTransporter);
+                        } catch (InterruptedException | ConnectionException e) {
+                            if (wrapper != null) {
+                                logger.warn("register service: {} error. prepare retry...", wrapper);
+                                final ServiceWrapper finalWrapper = wrapper;
+                                // 延迟后再次发送
+                                if (registerScheduled != null) {
+                                    registerScheduled.schedule(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            wrappers.add(finalWrapper);
+                                        }
+                                    }, RegisterConfig.delayPublish, RegisterConfig.delayUnit);
+                                }
+                            }
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        }
+        if (StringUtils.isNotEmpty(providerConfig.getMonitorServerKey())) {
+            monitor = new ScrewMonitor(registryConnector, providerConfig);
+            registryClient.setMonitor(monitor);
+        }
         // 启动服务器
         rpcServer.start();
     }
 
     @Override
     public void shutdown() throws InterruptedException {
-        logger.info("started closed provider service...");
+        if (logger.isInfoEnabled()) {
+            logger.info("started closed provider service...");
+        }
         rpcServer.shutdownGracefully();
 
         if (registryClient != null) {
@@ -242,20 +265,34 @@ public class NettyProvider implements Provider {
         }
 
         if (!shutdown.getAndSet(true)) {
-            rpcExec.shutdown();
+            if (rpcExec != null) {
+                rpcExec.shutdown();
+            }
 
-            registerExec.shutdown();
+            if (registerExec != null) {
+                registerExec.shutdown();
+            }
 
-            registerScheduled.shutdown();
+            if (registerScheduled != null) {
+                registerScheduled.shutdown();
+            }
+
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("closed provider successful!");
         }
 
-        logger.info("closed provider successful!");
+        if (monitor != null) {
+            monitor.shutdown();
+        }
     }
 
     @Override
     public void registerProcessor() {
         NettyProviderRequestDispatcher dispatcher = new NettyProviderRequestDispatcher(this);
-        rpcServer.registerProcessors(Protocol.Code.RPC_REQUEST, dispatcher, rpcExec);
+        if (rpcServer != null) {
+            rpcServer.registerProcessors(Protocol.Code.RPC_REQUEST, dispatcher, rpcExec);
+        }
     }
 
     @Override
@@ -277,7 +314,7 @@ public class NettyProvider implements Provider {
         if (providerConfig.getRegisterConfig() == null) {
             providerConfig.setRegisterConfig(registerConfig);
         }
-        registryClient = new ProviderClient(providerConfig.getRegisterConfig(), this);
+        registryClient = new ProviderClient(providerConfig, this);
     }
 
     public ConcurrentHashMap<Long, MessageNonAck> getNonAck() {
@@ -302,6 +339,10 @@ public class NettyProvider implements Provider {
 
     public SConnector getRegistryConnector() {
         return registryConnector;
+    }
+
+    public AtomicBoolean getShutdown() {
+        return shutdown;
     }
 
     {

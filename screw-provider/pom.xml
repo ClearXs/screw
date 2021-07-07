@@ -11,7 +11,6 @@
 
     <artifactId>screw-provider</artifactId>
 
-
     <dependencies>
         <dependency>
             <groupId>com.jw.screw</groupId>
@@ -25,7 +24,22 @@
 
         <dependency>
             <groupId>com.jw.screw</groupId>
+            <artifactId>screw-loadbalance</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
             <artifactId>screw-registry</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-opentracing</artifactId>
         </dependency>
     </dependencies>
 </project>

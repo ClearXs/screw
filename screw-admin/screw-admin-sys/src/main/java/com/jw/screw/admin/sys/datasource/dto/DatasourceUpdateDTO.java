@@ -40,6 +40,13 @@ public class DatasourceUpdateDTO {
     @NotEmpty(message = "数据源密码不能为空")
     private String datasourcePassword;
 
+    @ApiModelProperty(value = "数据源连接类型", example = "default, druid")
+    @NotEmpty(message = "数据源连接类型不能为空")
+    private String datasourceConnectType;
+
+    @ApiModelProperty(value = "数据源连接变量", example = "json")
+    private String datasourceConnectVariables;
+
     @ApiModelProperty(value = "乐观锁")
     private int version;
 

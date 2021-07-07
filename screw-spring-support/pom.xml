@@ -12,6 +12,10 @@
     <artifactId>screw-spring-support</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-remote</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.jw.screw</groupId>
@@ -36,6 +40,12 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

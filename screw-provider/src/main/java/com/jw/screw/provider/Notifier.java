@@ -63,7 +63,6 @@ public class Notifier {
                             messageNonAck.setChannel(channel);
                             messageNonAck.setBody(monitorBody);
                             nettyProvider.getNonAck().put(messageNonAck.getUnique(), messageNonAck);
-
                             channel.writeAndFlush(remoteTransporter);
                         } else {
                             delayNotifier.schedule(new Runnable() {
@@ -73,7 +72,6 @@ public class Notifier {
                                 }
                             }, RegisterConfig.delayPublish, RegisterConfig.delayUnit);
                         }
-
                     } catch (ConnectionException | InterruptedException e) {
                         logger.warn("unicast error: {}", e.getMessage());
                     }
@@ -100,7 +98,7 @@ public class Notifier {
      * 向注册中心发送单播数据
      * @param result 方法调用的结果
      * @param method 具体调用什么方法
-     * @throws
+     * @throws ConnectionException
      */
     public void unicast(Object result, Class<?> targetClass, Method method) throws ConnectionException {
         ProviderService publishAnnotation = targetClass.getAnnotation(ProviderService.class);
@@ -109,7 +107,7 @@ public class Notifier {
             // 构建单播的body对象
             MonitorBody monitorBody = new MonitorBody();
             NettyProviderConfig providerConfig = nettyProvider.getProviderConfig();
-            String providerKey = providerConfig.getProviderKey();
+            String providerKey = providerConfig.getServerKey();
             monitorBody.setProviderKey(providerKey);
             monitorBody.setResult(result);
             MonitorBody.MethodWrapper methodWrapper = new MonitorBody.MethodWrapper();

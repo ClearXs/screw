@@ -1,9 +1,8 @@
 package com.jw.screw.consumer.model;
 
-
 import com.jw.screw.common.metadata.ServiceMetadata;
 import com.jw.screw.common.util.Requires;
-import com.jw.screw.consumer.ConnectWatch;
+import com.jw.screw.consumer.ConnectionWatcher;
 import com.jw.screw.consumer.Consumer;
 
 import java.lang.reflect.InvocationHandler;
@@ -23,7 +22,7 @@ public class ProxyObjectFactory {
 
     private ServiceMetadata serviceMetadata;
 
-    private ConnectWatch connectWatch;
+    private ConnectionWatcher connectionWatcher;
 
     private boolean isAsync = false;
 
@@ -48,8 +47,8 @@ public class ProxyObjectFactory {
         return this;
     }
 
-    public ProxyObjectFactory connectWatch(ConnectWatch connectWatch) {
-        this.connectWatch = connectWatch;
+    public ProxyObjectFactory connectWatch(ConnectionWatcher connectionWatcher) {
+        this.connectionWatcher = connectionWatcher;
         return this;
     }
 
@@ -72,7 +71,7 @@ public class ProxyObjectFactory {
     }
 
     /**
-     * 直接进行远程调用，消费者与服务提供者不必需要依赖同一个api包也能进行rpc。到这是一种不保证可靠性的做法
+     * 直接进行远程调用，消费者与服务提供者不必需要依赖同一个api包也能进行rpc，但这是一种不保证可靠性的做法。
      * @param serviceName 目标的服务名如DemoService
      * @param methodName 目标方法名
      * @param args 目标方法的参数
@@ -85,11 +84,11 @@ public class ProxyObjectFactory {
 
     private Object rpcInvoke(String serviceName, String methodName, Class<?> returnType, Object[] args) throws InterruptedException {
         // 直连情况
-        if (connectWatch == null) {
+        if (connectionWatcher == null) {
             return rpcInvokeResult(serviceName, methodName, returnType, args);
         }
         if (!isAvailable.get()) {
-            boolean connectAvailable = connectWatch.waitForAvailable(10000);
+            boolean connectAvailable = connectionWatcher.waitForAvailable(10000);
             if (connectAvailable) {
                 isAvailable.set(true);
             }

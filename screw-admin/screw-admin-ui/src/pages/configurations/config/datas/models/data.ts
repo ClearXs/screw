@@ -1,5 +1,5 @@
 import { Reducer, Effect } from 'umi';
-import { queryConfigData, saveConfigData, deleteConfigData } from '@/pages/configurations/config/datas/services/data'
+import { queryConfigData, saveConfigData, deleteConfigData, transfer } from '@/pages/configurations/config/datas/services/data'
 import { message } from 'antd';
 // @ts-ignore
 import { AppConfigData, AppConfigDataQueryParams } from '@/pages/configurations/config/data';
@@ -21,6 +21,7 @@ export interface AppConfigDataModelType {
         saveConfigData: Effect;
         deleteConfigData: Effect;
         changeConfigData: Effect;
+        transfer: Effect;
     };
     reducers: {
         setState: Reducer<AppConfigDataState>;
@@ -61,7 +62,8 @@ const AppConfigDataModel: AppConfigDataModelType = {
         },
         *saveConfigData({ payload, callback}, { put, call}) {
             const { appData, logicOperate } = payload;
-            let submitData = appData.map((value: any) => {
+            const copyAppData = JSON.parse(JSON.stringify(appData));
+            let submitData = copyAppData.map((value: AppConfigData) => {
                 value = deleteAttr(value, 'isDraw');
                 value = deleteAttr(value, 'createBy');
                 let configVersion = value.configVersion;
@@ -74,22 +76,25 @@ const AppConfigDataModel: AppConfigDataModelType = {
                 value = deleteAttr(value, 'updateTime');
                 value = deleteAttr(value, 'isDraw');
                 value = deleteAttr(value, 'deleted');
+                value = deleteAttr(value, 'index');
                 return value;
             });
             const result = yield call(saveConfigData, {submitData, logicOperate});
             callback && callback(result);
         },
         *deleteConfigData({ payload, callback }, { call }) {
-            const configData = new Array<AppConfigData>();
-            // 删除appData.isDraw属性
-            payload = deleteAttr(payload, 'createBy');
-            payload = deleteAttr(payload, 'createTime');
-            payload = deleteAttr(payload, 'updateBy');
-            payload = deleteAttr(payload, 'updateTime');
-            payload = deleteAttr(payload, 'isDraw');
-            payload = deleteAttr(payload, 'configVersion');
-            configData.push(payload);
-            const result = yield call(deleteConfigData, configData);
+            const copyAppData = JSON.parse(JSON.stringify(payload));
+            const appConfigData = copyAppData.map((value: AppConfigData) => {
+                value = deleteAttr(value, 'createBy');
+                value = deleteAttr(value, 'createTime');
+                value = deleteAttr(value, 'updateBy');
+                value = deleteAttr(value, 'updateTime');
+                value = deleteAttr(value, 'isDraw');
+                value = deleteAttr(value, 'configVersion');
+                value = deleteAttr(value, 'index');
+                return value;
+            });
+            const result = yield call(deleteConfigData, appConfigData);
             callback && callback(result);
         },
         *changeConfigData({ payload, callback }, { put }) {
@@ -100,6 +105,10 @@ const AppConfigDataModel: AppConfigDataModelType = {
                 },
             });
             callback && callback(payload);
+        },
+        *transfer({ payload, callback }, { call }) {
+            const result = yield call(transfer, encodeURIComponent(JSON.stringify(payload)));
+            callback && callback(result);
         }
     },
     reducers: {

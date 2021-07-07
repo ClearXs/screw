@@ -32,10 +32,10 @@ public class PageFactoryBuilder<T> {
         Page<T> page = new Page<>();
         // 1.设置当前页
         page.setCurrent(pageParams.getPageNum());
-        // 2.设置页面大小
-        page.setSize(pageParams.getPageSize());
-        // 3.判断是否要查询所有的数目
-        if (!BeanUtil.isEmpty(pageParams.getSearchCount())) {
+            // 2.设置页面大小
+            page.setSize(pageParams.getPageSize());
+            // 3.判断是否要查询所有的数目
+            if (!BeanUtil.isEmpty(pageParams.getSearchCount())) {
             page.setSearchCount(pageParams.getSearchCount());
         }
         // 4.设置排序的字段
@@ -47,7 +47,7 @@ public class PageFactoryBuilder<T> {
                 if (order.getAsc()) {
                     orderItems.add(OrderItem.asc(order.getOrderColumn()));
                     // false desc
-                } else{
+                } else {
                     orderItems.add(OrderItem.desc(order.getOrderColumn()));
                 }
             }

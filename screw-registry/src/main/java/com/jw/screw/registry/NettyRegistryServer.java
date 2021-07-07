@@ -7,6 +7,7 @@ import com.jw.screw.common.model.Tuple;
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.common.transport.body.*;
 import com.jw.screw.common.util.Collections;
+import com.jw.screw.common.util.IdUtils;
 import com.jw.screw.remote.Protocol;
 import com.jw.screw.remote.modle.RemoteTransporter;
 import com.jw.screw.remote.netty.NettyServer;
@@ -18,10 +19,7 @@ import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
@@ -58,12 +56,15 @@ public class NettyRegistryServer extends NettyServer {
 
     /**
      * 处理服务注册、订阅
-     * @param ctx
-     * @param request
+     * @param ctx {@link ChannelHandlerContext}
+     * @param request {@link RemoteTransporter}
      */
     @Override
-    protected void processRemoteRequest(ChannelHandlerContext ctx, RemoteTransporter request) {
+    public void processRemoteRequest(ChannelHandlerContext ctx, RemoteTransporter request) {
         byte code = request.getCode();
+        if (code == Protocol.Code.MONITOR_ADDRESS) {
+            code = Protocol.Code.SERVICE_SUBSCRIBE;
+        }
         Tuple<NettyProcessor, ExecutorService> processorTuple = processTables.get(code);
         if (processorTuple == null) {
             // 发送重试的Ack消息
@@ -102,12 +103,16 @@ public class NettyRegistryServer extends NettyServer {
                         // 设置未发布消息，等待消费者Ack
                         RemoteTransporter response = processor.process(ctx, request);
                         RegisterBody registerBody = (RegisterBody) response.getBody();
-                        MessageNonAck messageNonAck = new MessageNonAck();
-                        messageNonAck.setBody(registerBody);
-                        messageNonAck.setUnique(request.getUnique());
-                        messageNonAck.setChannel(consumerChannel);
-                        registryContext.getNonAck().put(messageNonAck.getUnique(), messageNonAck);
-
+                        if (request.getCode() == Protocol.Code.SERVICE_SUBSCRIBE) {
+                            MessageNonAck messageNonAck = new MessageNonAck();
+                            messageNonAck.setBody(registerBody);
+                            messageNonAck.setUnique(request.getUnique());
+                            messageNonAck.setChannel(consumerChannel);
+                            registryContext.getNonAck().put(messageNonAck.getUnique(), messageNonAck);
+                        }
+                        if (request.getCode() == Protocol.Code.MONITOR_ADDRESS) {
+                            response.setCode(Protocol.Code.MONITOR_ADDRESS);
+                        }
                         ctx.channel().writeAndFlush(response);
                     }
                 });
@@ -139,9 +144,9 @@ public class NettyRegistryServer extends NettyServer {
 
     /**
      * 处理服务注册
-     * @param unresolvedAddress
-     * @param registerMetadata
-     * @param acknowledgeBody
+     * @param unresolvedAddress 提供者的地址
+     * @param registerMetadata 注册的元数据{@link RegisterMetadata}
+     * @param acknowledgeBody 响应{@link AcknowledgeBody}
      */
     public void handleRegister(Channel channel, UnresolvedAddress unresolvedAddress, RegisterMetadata registerMetadata, AcknowledgeBody acknowledgeBody) {
         try {
@@ -174,11 +179,10 @@ public class NettyRegistryServer extends NettyServer {
     }
 
     /**
-     * 把服务注册到注册中心的服务实例表中
-     * 若不第一次注册，返回空
-     * @param channel
-     * @param unresolvedAddress
-     * @param registerMetadata
+     * 把服务注册到注册中心的服务实例表中，若不第一次注册，返回空
+     * @param channel {@link Channel}
+     * @param unresolvedAddress {@link UnresolvedAddress}
+     * @param registerMetadata {@link RegisterMetadata}
      * @return 是否通知消费者 服务更新 true
      */
     public boolean registerService(Channel channel, UnresolvedAddress unresolvedAddress, RegisterMetadata registerMetadata) {
@@ -186,14 +190,16 @@ public class NettyRegistryServer extends NettyServer {
             logger.info("register unresolvedAddress: {}, serviceProviderName: {}, publishService: {}", unresolvedAddress, registerMetadata.getServiceProviderName(), registerMetadata.getPublishService());
         }
         ServiceMetadata serviceMetadata = new ServiceMetadata(registerMetadata.getServiceProviderName());
+        // 获取以provider key的服务注册实例表，可以存在集群
         ConcurrentHashMap<UnresolvedAddress, RegisterMetadata> registerInfo = registryContext.getRegisterInfo(registerMetadata.getServiceProviderName());
         if (registerInfo.putIfAbsent(unresolvedAddress, registerMetadata) == null) {
             registerMetadata.setChannel(channel);
+            // 某个集群下服务表（应该只会存在于一个）
             // 保存服务提供者列表
             CopyOnWriteArraySet<UnresolvedAddress> unresolvedAddresses = registryContext.getServiceInfo(serviceMetadata);
             unresolvedAddresses.add(unresolvedAddress);
+            // 把当前服务注册示例存放于registry -> provider的channel中（为什么这么做，其目的是当服务下线时，能够从服务实例表删除）
             Attribute<CopyOnWriteArraySet<RegisterMetadata>> publishAttr = channel.attr(PUBLISH_KEY);
-
             CopyOnWriteArraySet<RegisterMetadata> registerSet = publishAttr.get();
             if (Collections.isEmpty(registerSet)) {
                 registerSet = new CopyOnWriteArraySet<>();
@@ -206,14 +212,22 @@ public class NettyRegistryServer extends NettyServer {
         RegisterMetadata instanceRegister = registerInfo.get(unresolvedAddress);
         if (instanceRegister != null) {
             instanceRegister.setChannel(channel);
+            Set<String> publishService = instanceRegister.getPublishService();
+            if (Collections.isEmpty(publishService)) {
+                publishService = new HashSet<>();
+            }
+            instanceRegister.setPublishService(publishService);
+            if (Collections.isNotEmpty(registerMetadata.getPublishService())) {
+                publishService.addAll(registerMetadata.getPublishService());
+            }
         }
         // 判断是否有同一个服务加入
-        return Collections.union(instanceRegister.getPublishService(), registerMetadata.getPublishService());
+        return instanceRegister != null && Collections.union(instanceRegister.getPublishService(), registerMetadata.getPublishService());
     }
 
     /**
      * 处理消费的订阅
-     * @param serviceProviders
+     * @param serviceProviders {@link ServiceMetadata}
      */
     public List<RegisterMetadata> handleSubscribe(ServiceMetadata... serviceProviders) {
         List<RegisterMetadata> registerMetadata = new ArrayList<>();
@@ -236,7 +250,7 @@ public class NettyRegistryServer extends NettyServer {
         }
         for (Map.Entry<UnresolvedAddress, RegisterMetadata> registerEntry : registerMap.entrySet()) {
             RegisterMetadata registerMetadata = registerEntry.getValue();
-            List<String> publishService = registerMetadata.getPublishService();
+            Set<String> publishService = registerMetadata.getPublishService();
             boolean contains = publishService.contains(serviceName);
             if (contains) {
                 serviceIsExist = true;
@@ -274,7 +288,6 @@ public class NettyRegistryServer extends NettyServer {
                     }
                 }
             }
-
         }
     }
 
@@ -292,13 +305,12 @@ public class NettyRegistryServer extends NettyServer {
             OfflineBody offlineBody = new OfflineBody(registerMetadata);
             for (Channel channel : channels) {
                 // 记录到MessageNonAck
-                RemoteTransporter remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.SERVICE_OFFLINE, offlineBody);
+                RemoteTransporter remoteTransporter = RemoteTransporter.createRemoteTransporter(Protocol.Code.SERVICE_OFFLINE, offlineBody, IdUtils.getNextId());
                 MessageNonAck messageNonAck = new MessageNonAck();
                 messageNonAck.setBody(offlineBody);
                 messageNonAck.setChannel(channel);
                 messageNonAck.setUnique(remoteTransporter.getUnique());
                 registryContext.getNonAck().put(remoteTransporter.getUnique(), messageNonAck);
-
                 channel.writeAndFlush(remoteTransporter)
                         .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
             }
@@ -366,8 +378,10 @@ public class NettyRegistryServer extends NettyServer {
                     ConcurrentHashMap<String, CopyOnWriteArraySet<Channel>> subscribeChannels = registryContext.getSubscribeChannels();
                     if (Collections.isNotEmpty(subscribeChannels)) {
                         for (Map.Entry<String, CopyOnWriteArraySet<Channel>> subscribeEntry : subscribeChannels.entrySet()) {
-                            CopyOnWriteArraySet<Channel> instanceConsumerChannels = subscribeEntry.getValue();
-                            instanceConsumerChannels.remove(channel);
+                            if (serviceMetadata.getServiceProviderName().equals(subscribeEntry.getKey())) {
+                                CopyOnWriteArraySet<Channel> instanceConsumerChannels = subscribeEntry.getValue();
+                                instanceConsumerChannels.remove(channel);
+                            }
                         }
                     }
                 }

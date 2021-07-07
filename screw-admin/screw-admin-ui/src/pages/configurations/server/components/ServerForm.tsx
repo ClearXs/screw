@@ -29,7 +29,7 @@ const ServerForm: React.FC<any> = ( props ) => {
                 }}
             />
             {/* @ts-ignore */}
-            <ProFormText
+            {/* <ProFormText
                 key="ip"
                 width="m"
                 name="serverIp"
@@ -37,7 +37,7 @@ const ServerForm: React.FC<any> = ( props ) => {
                 placeholder="请输入ip"
                 rules={[{ required: true, message: '请输入ip!' }]}
                 initialValue={server.serverIp}
-            />
+            /> */}
             {/* @ts-ignore */}
             <ProFormText
                 key="port"

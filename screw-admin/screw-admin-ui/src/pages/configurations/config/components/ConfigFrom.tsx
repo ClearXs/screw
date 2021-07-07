@@ -9,23 +9,26 @@ const ConfigForm: React.FC<any> = ( props ) => {
     const appConfig: AppConfig = props.appConfig;
 
     return (
+
         <ProForm.Group>
             {/* @ts-ignore*/}
-            <ProFormText
-                key="name"
-                width="m"
-                name="configName"
-                label="配置名称"
-                placeholder="请输入名称"
-                rules={[{ required: true, message: '请输入名称!' }]}
-                initialValue={appConfig ? appConfig.configName : ''}
-            />
+            <div style={{marginRight: '80px', marginLeft: '30px'}}>
+                <ProFormText
+                    key="name"
+                    name="configName"
+                    label="配置名称"
+                    width="m"
+                    placeholder="请输入名称"
+                    rules={[{ required: true, message: '请输入名称!' }]}
+                    initialValue={appConfig ? appConfig.configName : ''}
+                />
+            </div>
             {/* @ts-ignore*/}
             <ProFormText
                 key="name"
-                width="m"
                 name="configKey"
                 label="配置key"
+                width="m"
                 placeholder="请输入key"
                 rules={[{ required: true, message: '请输入key!' }]}
                 initialValue={appConfig ? appConfig.configKey : ''}

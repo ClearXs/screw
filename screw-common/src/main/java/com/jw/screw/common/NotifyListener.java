@@ -2,6 +2,12 @@ package com.jw.screw.common;
 
 import com.jw.screw.common.metadata.RegisterMetadata;
 
+/**
+ * 消费者channel的监听器
+ * @author jiangw
+ * @date 2021/1/18 15:17
+ * @since 1.0
+ */
 public interface NotifyListener {
 
     /**
@@ -15,8 +21,8 @@ public interface NotifyListener {
      * <p>
      *     如果是通知移除服务，那么找到之前订阅的服务地址，进行删除
      * </p>
-     * @param event
-     * @param registerInfos
+     * @param event {@link NotifyEvent}
+     * @param registerInfos {@link RegisterMetadata}
      */
     void notify(NotifyEvent event, RegisterMetadata... registerInfos);
 

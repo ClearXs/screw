@@ -18,14 +18,29 @@ import java.util.List;
 @Mapper
 public interface AppServerDao extends BaseMapper<AppServer>, ExistMapper {
 
+    /**
+     * 查找所有服务
+     * @return {@link AppServer}
+     */
     List<AppServerVO> listAll();
 
+    /**
+     * 查询服务目录
+     * @param defaultServer 默认服务名称
+     * @return 服务
+     */
     List<String> queryServerDirectory(String defaultServer);
 
+    /**
+     * 查找默认服务
+     * @return {@link AppServer}
+     */
     List<AppServer> queryDefaultServer();
 
     /**
      * 删除数据源后更新服务
+     * @param dataSourceId 数据源id
+     * @return 删除是否成功
      */
     int deleteDataSourceUpdateServer(String dataSourceId);
 

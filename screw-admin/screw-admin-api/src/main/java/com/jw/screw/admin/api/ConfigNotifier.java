@@ -7,10 +7,11 @@ import com.jw.screw.admin.sys.config.constant.ConfigVersionConstant;
 import com.jw.screw.admin.sys.config.dto.data.AppConfigDataUpdateDTO;
 import com.jw.screw.admin.sys.config.dto.version.AppConfigVersionUpdateDTO;
 import com.jw.screw.admin.sys.config.entity.AppConfigVersion;
-import com.jw.screw.common.exception.ConnectionException;
-import com.jw.screw.provider.Notifier;
-import com.jw.screw.provider.annotations.ProviderService;
-import com.jw.screw.spring.ScrewSpringProvider;
+import com.jw.screw.admin.sys.config.model.AppConfigDataVO;
+import com.zzht.patrol.screw.common.exception.ConnectionException;
+import com.zzht.patrol.screw.provider.Notifier;
+import com.zzht.patrol.screw.provider.annotations.ProviderService;
+import com.zzht.patrol.screw.spring.ScrewSpringProvider;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -138,8 +139,19 @@ public class ConfigNotifier extends Notifier implements InitializingBean, Dispos
 
     // --------------------------- 单播删除配置数据 ---------------------------
 
+    /**
+     * 配置文件的删除
+     */
     @Pointcut("execution(* com.jw.screw.admin.sys.config.service.impl.AppConfigServiceImpl.deleteAppConfig*(..))")
     public void deleteConfigPoint() {
+    }
+
+    /**
+     * 配置项的删除
+     */
+    @Pointcut("execution(* com.jw.screw.admin.sys.config.service.impl.AppConfigDataServiceImpl.removeAppConfigData*(..))")
+    public void deleteConfigData() {
+
     }
 
     @Around("deleteConfigPoint()")
@@ -155,6 +167,27 @@ public class ConfigNotifier extends Notifier implements InitializingBean, Dispos
                 onDelete(result);
             }
         } catch (NoSuchMethodException | ConnectionException e) {
+            logger.warn("notify onDelete event error: {}", e.getMessage());
+        }
+        return proceed;
+    }
+
+    @Around("deleteConfigData()")
+    public Object deleteConfigData(ProceedingJoinPoint point) throws Throwable {
+        Integer proceed = (Integer) point.proceed();
+        Validators.doResult(proceed);
+        Object[] args = point.getArgs();
+        try {
+            List<AppConfigDataVO> configDataList = (List<AppConfigDataVO>) args[0];
+            if (!CollectionUtils.isEmpty(configDataList)) {
+                AppConfigDataVO appConfigDataVO = configDataList.get(0);
+                String versionId = appConfigDataVO.getConfigVersionId();
+                String result = remoteService.queryConfigByVersionId(versionId);
+                if (!StringUtils.isEmpty(result)) {
+                    onDelete(result);
+                }
+            }
+        } catch (Exception e) {
             logger.warn("notify onDelete event error: {}", e.getMessage());
         }
         return proceed;
@@ -194,7 +227,7 @@ public class ConfigNotifier extends Notifier implements InitializingBean, Dispos
         }
         // 判断当前版本是否是已发布的
         if (!ConfigVersionConstant.OPEN.equals(version.getConfigVersionStatus())) {
-             return proceed;
+            return proceed;
         }
         String result = remoteService.queryConfigByVersionId(version.getId());
         try {

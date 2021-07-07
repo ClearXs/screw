@@ -20,6 +20,10 @@ import java.util.List;
  */
 public class ServiceWrapperManager {
 
+    /**
+     * 对于那些{@link #notify()}、{@link #clone()}等方法则排除
+     */
+    private final static List<String> EXCLUDE_METHOD = new ArrayList<>();
 
     private final static String NOTIFY = "notify";
     private final static String NOTIFY_ALL = "notifyAll";
@@ -46,11 +50,6 @@ public class ServiceWrapperManager {
     private final static String SET_EXPOSE_PROXY = "setExposeProxy";
     private final static String GET_TARGET_CLASS = "getTargetClass";
     private final static String GET_PROXIED_INTERFACES = "getProxiedInterfaces";
-
-    /**
-     * 对于那些{@link #notify()}、{@link #clone()}等方法则排除
-     */
-    private final static List<String> EXCLUDE_METHOD = new ArrayList<>();
 
     static {
         EXCLUDE_METHOD.add(NOTIFY);
@@ -90,8 +89,7 @@ public class ServiceWrapperManager {
 
     /**
      * 对需要发布的服务加入容器中
-     * @param publishServices
-     * @return
+     * @param publishServices {@link Object} 服务实例
      */
     public void register(Object... publishServices) {
         for (Object publishService : publishServices) {
@@ -114,10 +112,9 @@ public class ServiceWrapperManager {
         if (service == null) {
             return null;
         }
-        ServiceWrapper serviceWrapper;
         Class<?> publishClass = service.publishService();
         String serviceName = publishClass.getSimpleName();
-        serviceWrapper = new ServiceWrapper(publishService, serviceName);
+        ServiceWrapper serviceWrapper = new ServiceWrapper(publishService, serviceName);
         for (Method method : methods) {
             Class<?> declaringClass = method.getDeclaringClass();
             Class<?>[] declaringClassInterfaces = declaringClass.getInterfaces();

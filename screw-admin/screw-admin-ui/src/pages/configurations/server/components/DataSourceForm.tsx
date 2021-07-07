@@ -1,5 +1,5 @@
 import React from 'react';
-import ProForm, { ProFormRadio } from '@ant-design/pro-form';
+import ProForm, { ProFormCheckbox } from '@ant-design/pro-form';
 import { Result, Button } from 'antd';
 import { DataSource } from '@/pages/configurations/datasource/data'
 import _ from 'lodash'
@@ -27,13 +27,12 @@ const ServerForm: React.FC<any> = ( props ) => {
         } else {
             return (
                 <ProForm.Group>
-                    <ProFormRadio.Group
+                    <ProFormCheckbox.Group
                         name="dataSource"
                         label="数据源"
-                        radioType="button"
                         options={
                             dataSources.map((dataSource) => {
-                                return {label: dataSource.datasourceName, value: dataSource.id}
+                                return {label: dataSource.datasourceName + '-' + '[' + dataSource.datasourceType + ']', value: dataSource}
                             })
                         }
                     />

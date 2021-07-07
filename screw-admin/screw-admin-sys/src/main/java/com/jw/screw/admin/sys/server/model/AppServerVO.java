@@ -69,7 +69,7 @@ public class AppServerVO {
 
     @ApiModelProperty(value = "数据源")
     @JsonProperty("datasource")
-    private DatasourceVO datasourceVO;
+    private List<DatasourceVO> datasourceVO;
 
     @ApiModelProperty(value = "配置")
     @JsonProperty("appConfigs")

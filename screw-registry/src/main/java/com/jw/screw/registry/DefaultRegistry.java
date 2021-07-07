@@ -80,6 +80,10 @@ public class DefaultRegistry extends AbstractRegistry {
     @Override
     public void shutdown() {
         super.shutdown();
+
+        registerExecutors.shutdown();
+        subscribeExecutors.shutdown();
+        unicastExecutors.shutdown();
     }
 
     {

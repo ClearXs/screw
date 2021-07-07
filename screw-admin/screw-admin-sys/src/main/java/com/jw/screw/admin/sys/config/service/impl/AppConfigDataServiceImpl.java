@@ -113,18 +113,18 @@ public class AppConfigDataServiceImpl implements AppConfigDataService {
             case ConfigDataConstant
                     .DataOperation
                     .DEPLOY:
-                        deployConfigData(appConfigDataUpdateDTO);
-                        break;
+                deployConfigData(appConfigDataUpdateDTO);
+                break;
             case ConfigDataConstant
                     .DataOperation
                     .SAVE:
-                        saveConfigData(appConfigDataUpdateDTO);
-                        break;
+                saveConfigData(appConfigDataUpdateDTO);
+                break;
             case ConfigDataConstant
                     .DataOperation
                     .EDIT:
-                        editConfigData(appConfigDataUpdateDTO);
-                        break;
+                editConfigData(appConfigDataUpdateDTO);
+                break;
             default:
                 throw new UnknowOperationException("未知的操作" + logicOperate);
         }
@@ -133,7 +133,7 @@ public class AppConfigDataServiceImpl implements AppConfigDataService {
 
     /**
      * 发布配置操作
-     * @param appConfigDataUpdateDTO
+     * @param appConfigDataUpdateDTO {@link AppConfigDataUpdateDTO}
      */
     private void deployConfigData(List<AppConfigDataUpdateDTO> appConfigDataUpdateDTO) throws InstantiationException, IllegalAccessException, UnknowOperationException, BasicOperationException {
         String configId = appConfigDataUpdateDTO.get(0).getAppConfigVersionVO().getConfigId();
@@ -182,7 +182,7 @@ public class AppConfigDataServiceImpl implements AppConfigDataService {
 
     /**
      * 保存配置的操作
-     * @param appConfigDataUpdateDTOS
+     * @param appConfigDataUpdateDTOS {@link AppConfigDataUpdateDTO}
      */
     private void saveConfigData(List<AppConfigDataUpdateDTO> appConfigDataUpdateDTOS) throws InstantiationException, IllegalAccessException, UnknowOperationException, BasicOperationException {
         // 1.生成一个新的未发布的版本
@@ -252,7 +252,7 @@ public class AppConfigDataServiceImpl implements AppConfigDataService {
      * 插入/更新数据库的处理
      * 1.把暂存的状态更新为存储的状态
      * 2.格式化话json数据
-     * @param appConfigDataUpdateDTO
+     * @param appConfigDataUpdateDTO {@link AppConfigDataUpdateDTO}
      */
     private void preHandler(List<AppConfigDataUpdateDTO> appConfigDataUpdateDTO) {
         for (AppConfigDataUpdateDTO configDataUpdateDTO : appConfigDataUpdateDTO) {
@@ -266,6 +266,9 @@ public class AppConfigDataServiceImpl implements AppConfigDataService {
             } catch (Exception e) {
                 log.error(e.getMessage());
                 // 过滤json数据 /n /t
+                if (StringUtils.isEmpty(dataValue)) {
+                    dataValue = "";
+                }
                 dataValue = dataValue.replace(StringPool.NEWLINE, "");
                 dataValue = dataValue.replace(StringPool.TAB, "");
             }

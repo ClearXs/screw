@@ -1,8 +1,11 @@
 package com.jw.screw.remote.netty.handler;
 
+import com.jw.screw.common.Callback;
+import com.jw.screw.common.exception.RemoteException;
 import com.jw.screw.common.transport.RemoteAddress;
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.remote.netty.ChannelGroup;
+import com.jw.screw.remote.netty.config.GlobeConfig;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -35,8 +38,6 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
 
     private final Timer timer;
 
-    private final static int RE_CONNECTION_MAX_NUM = 12;
-
     private volatile int state = START;
 
     /**
@@ -53,14 +54,20 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
     private volatile boolean firstConnect = true;
 
     /**
-     * 重连次数，考虑到这个处理器是共享的，所以会出现线程不安全的情况，考虑使用线程本地存储进行操作
+     * 重连次数，考虑到这个处理器是共享的，所以会出现线程不安全的情况，使用线程本地存储进行操作
      */
-    private final ThreadLocal<AtomicInteger> attempts = new ThreadLocal<>();
+    private int attempts;
 
-    public ConnectorWatchDog(Bootstrap bootstrap, Timer timer, ChannelGroup channelGroup) {
+    /**
+     * 回调
+     */
+    private Callback callback;
+
+    public ConnectorWatchDog(Bootstrap bootstrap, Timer timer, ChannelGroup channelGroup, Callback callback) {
         this.bootstrap = bootstrap;
         this.timer = timer;
         this.channelGroup = channelGroup;
+        this.callback = callback;
     }
 
     public void start() {
@@ -72,9 +79,8 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        attempts.remove();
-        attempts.set(new AtomicInteger(0));
+    public synchronized void channelActive(ChannelHandlerContext ctx) throws Exception {
+        attempts = 0;
         firstConnect = true;
         Channel channel = ctx.channel();
         if (channelGroup != null) {
@@ -83,19 +89,22 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
         if (logger.isInfoEnabled()) {
             logger.info("connector msg: {}", channel);
         }
+        // 通知回调
+        if (callback != null) {
+            callback.acceptable(null);
+        }
         // 通知流水线的处理器重连成功
         ctx.fireChannelActive();
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public synchronized void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (!isReConnect()) {
             if (logger.isWarnEnabled()) {
                 logger.warn("cancel re connect");
             }
             return;
         }
-
         if (logger.isDebugEnabled()) {
             logger.debug("client started re connection");
         }
@@ -104,20 +113,15 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
             this.socketAddress = new RemoteAddress(socketAddress.getHostString(), socketAddress.getPort());
             firstConnect = false;
         }
-        AtomicInteger attempt = attempts.get();
-        attempts.remove();
-        if (attempt == null) {
-            attempt = new AtomicInteger(0);
+        attempts++;
+        long timed = 4L << attempts;
+        if (timed >= GlobeConfig.MAX_DELAY_TIMED) {
+            timed = GlobeConfig.MAX_DELAY_TIMED;
         }
-        if (attempt.getAndIncrement() < RE_CONNECTION_MAX_NUM) {
-            long timed = 2L << attempt.get();
-            timer.newTimeout(this, timed, TimeUnit.MILLISECONDS);
-        } else {
-            if (logger.isInfoEnabled()) {
-                logger.info("client re connection failed, because attempts more than re connection max num");
-            }
+        timer.newTimeout(this, timed, TimeUnit.MILLISECONDS);
+        if (callback != null) {
+            callback.rejected(new RemoteException("reconnection failed"));
         }
-        attempts.set(attempt);
         ctx.fireChannelInactive();
     }
 
@@ -131,6 +135,7 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
                     ch.pipeline().addLast(channelHandlers());
                 }
             });
+            // 重连
             channelFuture = bootstrap.connect(InetSocketAddress.createUnresolved(socketAddress.getHost(), socketAddress.getPort()));
         }
         channelFuture.addListener(new ChannelFutureListener() {
@@ -141,9 +146,6 @@ public abstract class ConnectorWatchDog extends ChannelInboundHandlerAdapter imp
                         logger.info("client re connection successful");
                     }
                 } else {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("client re connection failed, started next times re connection");
-                    }
                     future.channel().pipeline().fireChannelInactive();
                 }
             }

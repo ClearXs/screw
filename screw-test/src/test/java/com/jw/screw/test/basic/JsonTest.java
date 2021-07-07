@@ -2,7 +2,7 @@ package com.jw.screw.test.basic;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.jw.screw.spring.ConfigParser;
+import com.jw.screw.spring.config.ConfigParser;
 import org.junit.Test;
 
 import java.util.Properties;

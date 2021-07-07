@@ -1,5 +1,7 @@
 package com.jw.screw.test.basic;
 
+import io.netty.util.HashedWheelTimer;
+
 public class ExtendTest {
 
 
@@ -19,5 +21,12 @@ public class ExtendTest {
         };
         int weight1 = test.weight();
         System.out.println(weight1);
+    }
+
+    @org.junit.Test
+    public void hashWheel() {
+        for (int i = 0; i < 100; i++) {
+            new HashedWheelTimer();
+        }
     }
 }

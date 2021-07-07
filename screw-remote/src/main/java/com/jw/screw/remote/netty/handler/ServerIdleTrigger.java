@@ -9,6 +9,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -37,7 +38,7 @@ public class ServerIdleTrigger extends ChannelInboundHandlerAdapter {
                 if (readTimeoutCount.getAndIncrement() >= HeartBeats.config().getAccept()) {
                     readTimeoutCount.set(0);
                     if (logger.isWarnEnabled()) {
-                        logger.warn("freed channel: {}, ", ctx.channel());
+                        logger.warn("free channel: {} ", ctx.channel());
                     }
                     ctx.fireChannelInactive();
                 }
@@ -45,6 +46,15 @@ public class ServerIdleTrigger extends ChannelInboundHandlerAdapter {
             }
         } else {
             super.userEventTriggered(ctx, evt);
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
+        // 远程连接强制关闭，直接对通道进行关闭
+        if (cause.getClass() == IOException.class) {
+            ctx.channel().close();
         }
     }
 }

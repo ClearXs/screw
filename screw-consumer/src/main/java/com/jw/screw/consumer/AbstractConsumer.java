@@ -10,7 +10,6 @@ import com.jw.screw.common.util.Collections;
 import com.jw.screw.remote.Protocol;
 import com.jw.screw.remote.modle.RemoteTransporter;
 import com.jw.screw.remote.netty.NettyChannelGroup;
-import com.jw.screw.remote.netty.NettyClient;
 import com.jw.screw.remote.netty.SConnector;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
@@ -18,23 +17,24 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author jiangw
  */
-public abstract class AbstractConsumer implements Consumer {
+public abstract class AbstractConsumer implements com.jw.screw.consumer.Consumer {
 
     private static Logger logger = LoggerFactory.getLogger(AbstractConsumer.class);
 
     /**
      * 作为rpc调用的客户端
      */
-    protected NettyClient rpcClient;
+    protected com.jw.screw.consumer.RpcClient rpcClient;
 
     /**
      * 作为注册中心的客户端
      */
-    protected ConsumerClient registerClient;
+    protected com.jw.screw.consumer.ConsumerClient registerClient;
 
     /**
      * 注册中心的连接器
@@ -53,6 +53,9 @@ public abstract class AbstractConsumer implements Consumer {
      */
     protected final CopyOnWriteArraySet<ServiceMetadata> subscribeService = new CopyOnWriteArraySet<>();
 
+    /**
+     * 未收到Ack的remote transport object，后台线程定时发送
+     */
     protected final ConcurrentHashMap<Long, MessageNonAck> nonAck = new ConcurrentHashMap<>();
 
     /**
@@ -81,20 +84,19 @@ public abstract class AbstractConsumer implements Consumer {
         messageNonAck.setUnique(remoteTransporter.getUnique());
         messageNonAck.setChannel(channel);
         nonAck.put(remoteTransporter.getUnique(), messageNonAck);
-
         channel.writeAndFlush(remoteTransporter);
     }
 
-    protected SConnector connector(ServiceMetadata serviceMetadata, UnresolvedAddress unresolvedAddress) throws InterruptedException {
+    protected SConnector connector(ServiceMetadata serviceMetadata, UnresolvedAddress unresolvedAddress) throws InterruptedException, ExecutionException {
         return connector(serviceMetadata, unresolvedAddress, 4);
     }
 
-    protected synchronized SConnector connector(ServiceMetadata serviceMetadata, UnresolvedAddress unresolvedAddress, int weight) throws InterruptedException {
+    protected synchronized SConnector connector(ServiceMetadata serviceMetadata, UnresolvedAddress unresolvedAddress, int weight) throws InterruptedException, ExecutionException {
         SConnector connector;
         ConcurrentHashMap<UnresolvedAddress, SConnector> serviceGroups = subscribeAddress.get(serviceMetadata);
         if (Collections.isEmpty(serviceGroups)) {
             ConcurrentHashMap<UnresolvedAddress, SConnector> newServiceGroups = new ConcurrentHashMap<>();
-            SConnector newConnector = rpcClient.connect(unresolvedAddress, new NettyChannelGroup(), weight);
+            SConnector newConnector = rpcClient.connect(unresolvedAddress, new NettyChannelGroup(), weight, null);
             subscribeAddress.putIfAbsent(serviceMetadata, newServiceGroups);
             connector = newServiceGroups.putIfAbsent(unresolvedAddress, newConnector);
             if (connector == null) {
@@ -103,7 +105,7 @@ public abstract class AbstractConsumer implements Consumer {
         } else {
             connector = serviceGroups.get(unresolvedAddress);
             if (connector == null) {
-                SConnector newConnector = rpcClient.connect(unresolvedAddress, new NettyChannelGroup(), weight);
+                SConnector newConnector = rpcClient.connect(unresolvedAddress, new NettyChannelGroup(), weight, null);
                 connector = serviceGroups.putIfAbsent(unresolvedAddress, newConnector);
                 if (connector == null) {
                     connector = newConnector;

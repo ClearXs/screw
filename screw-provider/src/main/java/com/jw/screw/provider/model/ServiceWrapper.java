@@ -65,8 +65,14 @@ public class ServiceWrapper {
      */
     public static class MethodWrapper {
 
+        /**
+         * 方法名
+         */
         private String methodName;
 
+        /**
+         * 方法参数
+         */
         private Class<?>[] parameterTypes;
 
         public MethodWrapper(String methodName, Class<?>[] parameterTypes) {

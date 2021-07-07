@@ -1,5 +1,6 @@
 import { Reducer, Effect } from 'umi';
-import { queryDatabase, addDatabase, editDatabase, deleteDatabase, testConnect } from '@/pages/configurations/datasource/services/index'
+import { queryDatabase, addDatabase, editDatabase, deleteDatabase, testConnect, testConnectByEntity } from '@/pages/configurations/datasource/services/index'
+import { transfer } from '@/pages/configurations/config/datas/services/data';
 import { message } from 'antd';
 import { DataSource } from '@/pages/configurations/datasource/data';
 import { ConnectState } from '@/models/connect';
@@ -19,6 +20,8 @@ export interface DataSourceModelType {
         editDatabase: Effect;
         deleteDatabase: Effect;
         testConnect: Effect;
+        testConnectByEntity: Effect;
+        transfer: Effect;
     };
     reducers: {
         setState: Reducer<DataSourceState>;
@@ -54,7 +57,6 @@ const DataSourceModel: DataSourceModelType = {
         *addDatabase({ payload, callback }, { call }) {
             const result = yield call(addDatabase, payload);
             yield callback && callback(result);
-
         },
         *editDatabase({ payload, callback }, { call }) {
             const result = yield call(editDatabase, payload);
@@ -67,6 +69,14 @@ const DataSourceModel: DataSourceModelType = {
         *testConnect({ payload, callback }, { call }) {
             const result = yield call(testConnect, payload);
             yield callback && callback(result);
+        },
+        *testConnectByEntity({ payload, callback }, { call }) {
+            const result = yield call(testConnectByEntity, payload);
+            yield callback && callback(result);
+        },
+        *transfer({ payload, callback }, { call} ) {
+            const result = yield call(transfer, encodeURIComponent(JSON.stringify(payload)));
+            callback && callback(result);
         }
     },
     reducers: {

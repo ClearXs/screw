@@ -36,7 +36,7 @@ public class Requires {
             }
         }
         if (obj instanceof Long) {
-            if ((Long) obj == 0) {
+            if ((Long) obj == 0L) {
                 throw new IllegalArgumentException("requires: " + message + " is empty");
             }
         }
@@ -57,3 +57,4 @@ public class Requires {
         }
     }
 }
+

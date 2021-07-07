@@ -5,6 +5,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -15,10 +17,11 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @Aspect
-@Slf4j
 public class RecordLog {
 
-    @Pointcut("execution(* com.jw.screw.admin.web.controller..*(..))")
+    private static Logger log = LoggerFactory.getLogger(RecordLog.class);
+
+    @Pointcut("execution(* com.jw.screw..controller..*(..))")
     public void pointCut() {};
 
     @Around("pointCut()")

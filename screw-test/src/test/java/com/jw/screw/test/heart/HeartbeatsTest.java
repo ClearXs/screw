@@ -1,10 +1,13 @@
 package com.jw.screw.test.heart;
 
+import com.jw.screw.common.exception.ConnectionException;
 import com.jw.screw.provider.NettyProvider;
 import com.jw.screw.provider.NettyProviderConfig;
 import com.jw.screw.provider.annotations.ProviderService;
 import com.jw.screw.registry.DefaultRegistry;
 import org.junit.Test;
+
+import java.util.concurrent.ExecutionException;
 
 public class HeartbeatsTest {
 
@@ -12,13 +15,12 @@ public class HeartbeatsTest {
     public void heartbeats() {
         DefaultRegistry defaultRegistry = new DefaultRegistry(8080);
         defaultRegistry.start();
-
     }
 
     @Test
-    public void client() throws InterruptedException {
+    public void client() throws InterruptedException, ConnectionException, ExecutionException {
         NettyProviderConfig providerConfig = new NettyProviderConfig();
-        providerConfig.setProviderKey("demo");
+        providerConfig.setServerKey("demo");
         providerConfig.setPort(8082);
         NettyProvider nettyProvider = new NettyProvider(providerConfig);
         nettyProvider.registry("localhost", 8080);

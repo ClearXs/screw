@@ -43,7 +43,7 @@ public enum DataTypeEnum {
     /**
      * sql server
      */
-    SQLSERVER("sqlserver", "sqlserver", "com.microsoft.sqlserver.jdbc.SQLServerDriver","jdbc:sqlserver://{ip}:{port};DatabaseName={dbname}");
+    SQLSERVER("mssql", "mssql", "com.microsoft.sqlserver.jdbc.SQLServerDriver","jdbc:sqlserver://{ip}:{port};DatabaseName={dbname}");
 
     private String feature;
     private String desc;

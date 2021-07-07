@@ -59,6 +59,12 @@ export default defineConfig({
           ],
         },
         {
+          name: '监控中心',
+          icon: 'setting',
+          path: '/monitor',
+          component: '@/pages/monitor',
+        },
+        {
           component: '@/pages/404',
         },
       ],

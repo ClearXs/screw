@@ -16,4 +16,21 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-remote</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>${micrometer.version}</version>
+        </dependency>
+    </dependencies>
 </project>

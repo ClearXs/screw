@@ -33,7 +33,7 @@ public class RegistryContext {
     private final ConcurrentHashMap<String, CopyOnWriteArraySet<Channel>> subscribeChannels = new ConcurrentHashMap<>();
 
     /**
-     * 服务提供者注册实例列表。可以存放多个实例
+     * 服务提供者注册实例列表，存放多个服务实例
      * key: providerKey
      * value：注册的多个服务元数据
      */

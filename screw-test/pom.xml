@@ -12,7 +12,7 @@
     <artifactId>screw-test</artifactId>
 
     <dependencies>
-
+        
         <!-- 作为provider -->
         <dependency>
             <groupId>com.jw.screw</groupId>
@@ -31,9 +31,29 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>4.3.0.RELEASE</version>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-remote</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>2.1.11.RELEASE</version>
         </dependency>
 
     </dependencies>

@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef, useImperativeHandle } from 'react';
 import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
 import ProForm from '@ant-design/pro-form';
-import Field, { ProFieldFCMode } from '@ant-design/pro-field';
-import { Result, Modal, Descriptions, Menu } from 'antd';
+import Field from '@ant-design/pro-field';
+import { Result, Menu, Popover } from 'antd';
 import { AppServer } from '@/pages/configurations/server/data';
-// @ts-ignore
 import { AppConfig } from '@/pages/configurations/config/data'
 import _ from 'lodash'
 
@@ -13,8 +12,6 @@ const ServerForm: React.FC<any> = ( props ) => {
     const defaultServer: Map<string, AppServer[]> = props.defaultServer;
 
     const actionRef = useRef<ActionType>();
-
-    const [state] = useState<ProFieldFCMode>('read');
 
     const [plain] = useState<boolean>(false);
 
@@ -52,24 +49,15 @@ const ServerForm: React.FC<any> = ( props ) => {
             search: false,
             render: (_, record) => {
                 return (
-                    <a onClick={() => {
-                        Modal.info({
-                            title: `[${record.configName}-json数据]`,
-                            content: (
-                                <Descriptions>
-                                    <Descriptions.Item>
-                                        <Field
-                                            text={record.configJson && record.configJson}
-                                            valueType="jsonCode"
-                                            mode={state}
-                                            plain={plain}
-                                        />
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            ),
-                            okText: '返回'
-                        })
-                    }}>查看</a>
+                    <Popover title={record.configName} content={
+                        <Field
+                            text={record.configJson && record.configJson}
+                            valueType="jsonCode"
+                            plain={plain}
+                        />
+                    } color="#F6F8FA">
+                        <a style={{cursor: 'default'}}>详情</a>
+                    </Popover>
                 )
             }
         }
@@ -120,6 +108,9 @@ const ServerForm: React.FC<any> = ( props ) => {
             const keys = new Array();
             for (let key in defaultServer) {
                 const appServers = defaultServer[key]
+                if (appServers.length === 0) {
+                    continue;
+                }
                 keys.push(appServers[0].id);
                 break;
             }
@@ -181,7 +172,6 @@ const ServerForm: React.FC<any> = ( props ) => {
                         tableAlertOptionRender={false}
                         rowKey="id"
                     >
-
                     </ProTable>
                 </ProForm.Group>
             )

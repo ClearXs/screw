@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>screw-monitor</artifactId>
+        <groupId>com.jw.screw</groupId>
+        <version>1.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>screw-monitor-agent</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <premain.class>com.jw.screw.monitor.agent.ScrewAgent</premain.class>
+        <agent.class>com.jw.screw.monitor.agent.ScrewAgent</agent.class>
+        <can.redefine.classes>true</can.redefine.classes>
+        <can.retransform.classes>true</can.retransform.classes>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-monitor-opentracing</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-consumer</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-provider</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <!-- 自动添加META-INFO/MANIFEST.MF -->
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                        <manifestEntries>
+                            <Premain-Class>${premain.class}</Premain-Class>
+                            <Agent-Class>${agent.class}</Agent-Class>
+                            <Can-Redefine-classes>${can.redefine.classes}</Can-Redefine-classes>
+                            <Can-Retransform-classes>${can.retransform.classes}</Can-Retransform-classes>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <version>3.2.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

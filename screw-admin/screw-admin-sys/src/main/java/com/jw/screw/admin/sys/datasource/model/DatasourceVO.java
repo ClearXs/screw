@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.Date;
 
 @Data
@@ -34,6 +35,13 @@ public class DatasourceVO {
 
     @ApiModelProperty(value = "数据源密码")
     private String datasourcePassword;
+
+    @ApiModelProperty(value = "数据源连接类型", example = "default, druid")
+    @NotEmpty(message = "数据源连接类型不能为空")
+    private String datasourceConnectType;
+
+    @ApiModelProperty(value = "数据源连接变量", example = "json")
+    private String datasourceConnectVariables;
 
     @ApiModelProperty(value = "创建人")
     @TableField(fill = FieldFill.INSERT)

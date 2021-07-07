@@ -24,7 +24,6 @@ public class AppServerUpdateDTO {
     private String serverCode;
 
     @ApiModelProperty(value = "服务ip")
-    @NotEmpty(message = "服务ip不能为空")
     private String serverIp;
 
     @ApiModelProperty(value = "服务端口")

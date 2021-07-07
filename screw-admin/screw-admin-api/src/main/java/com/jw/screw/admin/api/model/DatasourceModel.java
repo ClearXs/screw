@@ -26,4 +26,10 @@ public class DatasourceModel {
 
     @ApiModelProperty(value = "数据源密码")
     private String datasourcePassword;
+
+    @ApiModelProperty(value = "数据源连接类型", example = "default, druid")
+    private String datasourceConnectType;
+
+    @ApiModelProperty(value = "数据源连接变量", example = "json")
+    private String datasourceConnectVariables;
 }

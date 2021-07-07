@@ -11,5 +11,24 @@
 
     <artifactId>screw-common</artifactId>
 
+    <properties>
+        <snakeyaml.version>1.27</snakeyaml.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
+    </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>${commons-collections.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 </project>

@@ -82,3 +82,30 @@ export const deleteAttr: (object: any, attrName: string) => any = (object, attrN
   }
   return object
 }
+
+/**
+ * 字节转换
+ * 1KB -> 1024byte
+ * 1M -> 1048576KB
+ * 1G -> 1073741824KB
+ * 1T -> 1099511627776KB
+ */
+export const byteTransfer: (num: number) => string = (num) => {
+  // 按照上述转换以此进行
+  num = num / 1024;
+  if (num <= 1024) {
+    return num.toFixed(0) + 'KB';
+  }
+  num = num / 1024;
+  if (num <= 1024) {
+    return num.toFixed(0) + 'M';
+  }
+  num = num / 1024;
+  if (num < 1024) {
+    return num.toFixed(0) + 'G';
+  }
+  num = num / 1024;
+  if (num < 1024) {
+    return num.toFixed(0) + 'T';
+  }
+}

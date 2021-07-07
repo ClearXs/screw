@@ -47,7 +47,7 @@ public class NettyConsumerSubscribeProcessor implements NettyProcessor {
             // 如果注册中心返回的生产者发布的服务为空，那么有两种可能：
             // 1.生产者未发布服务到注册中心
             // 2.网络分区
-            // 这种情况下，应该有重试策略
+            // 这种情况下，应该有重试策略（暂未实现）
             CopyOnWriteArraySet<NotifyListener> notifyListeners = this.notifyListeners.get(serviceMetadata);
             if (notifyListeners != null) {
                 for (NotifyListener listener : notifyListeners) {

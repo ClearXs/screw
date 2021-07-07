@@ -16,7 +16,6 @@ public class RemoteTransporterDecoder extends ReplayingDecoder<Protocol.State> {
 
     private static Logger logger = LoggerFactory.getLogger(RemoteTransporterDecoder.class);
 
-
     private final static int MAX_BODY_LENGTH = 20 * 1024 * 1024;
 
     private final Protocol header;
@@ -29,7 +28,6 @@ public class RemoteTransporterDecoder extends ReplayingDecoder<Protocol.State> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-
         switch (state()) {
             case HEADER_MAGIC:
                 validateMagic(in.readInt());
@@ -56,18 +54,12 @@ public class RemoteTransporterDecoder extends ReplayingDecoder<Protocol.State> {
                 if (remoteTransporter.getCode() != Protocol.Code.HEART_BEATS) {
                     out.add(remoteTransporter);
                 }
-                // 设置都指针断点，使下一次读取数据时能从MAGIC处开始读取。
+                // 设置读指针断点，使下一次读取数据时能从MAGIC处开始读取。
                 checkpoint(Protocol.State.HEADER_MAGIC);
                 break;
             default:
                 break;
         }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
-        super.exceptionCaught(ctx, cause);
     }
 
     private void validateMagic(int magic) throws RemoteException {

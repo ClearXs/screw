@@ -1,6 +1,5 @@
 package com.jw.screw.loadbalance;
 
-
 import com.jw.screw.common.transport.UnresolvedAddress;
 import com.jw.screw.common.util.Collections;
 import com.jw.screw.remote.netty.SConnector;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2020/12/3 16:39
  * @since 1.0
  */
-public abstract class AbstractRule implements Rule {
+public abstract class AbstractRule implements com.jw.screw.loadbalance.Rule {
 
     protected final AtomicInteger retryCount = new AtomicInteger(0);
 
@@ -31,7 +30,7 @@ public abstract class AbstractRule implements Rule {
         this.loadBalancer = loadBalancer;
     }
 
-    protected LoadBalancer getLoadBalancer() {
+    protected com.jw.screw.loadbalance.LoadBalancer getLoadBalancer() {
         return this.loadBalancer;
     }
 

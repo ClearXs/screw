@@ -4,8 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * 一些关于网络的操作
@@ -19,23 +21,33 @@ public class Remotes {
 
     /**
      * 判断目标是否可以连接
-     * @param host
-     * @param port
-     * @param timeout
-     * @return
+     * @param host 主机ip
+     * @param port 端口
+     * @param timeout 连接的超时时间
+     * @return 是否连接成功
      * @throws IOException
      */
     public static boolean connectable(String host, int port, int timeout) throws IOException {
         boolean isConnected = true;
-        Socket socket = new Socket();
-        try {
+        try (Socket socket = new Socket()) {
             socket.connect(new InetSocketAddress(host, port), timeout);
         } catch (IOException e) {
             logger.warn("connect host:[{}] port:[{}] failed", host, port);
             isConnected = false;
-        } finally {
-            socket.close();
         }
         return isConnected;
+    }
+
+    /**
+     * 获取当前机器的地址
+     * @return address
+     */
+    public static String getHost() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return "localhost";
     }
 }

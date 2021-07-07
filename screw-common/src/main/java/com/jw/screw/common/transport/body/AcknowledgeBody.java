@@ -1,5 +1,7 @@
 package com.jw.screw.common.transport.body;
 
+import lombok.Data;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -8,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @date 2020/11/30 13:37
  * @since 1.0
  */
+@Data
 public class AcknowledgeBody implements Body {
 
     private final static AtomicLong NEXT = new AtomicLong(0);
@@ -26,17 +29,5 @@ public class AcknowledgeBody implements Body {
     public AcknowledgeBody(long sequence, boolean isSuccess) {
         this.sequence = sequence;
         this.isSuccess = isSuccess;
-    }
-
-    public boolean isSuccess() {
-        return isSuccess;
-    }
-
-    public void setSuccess(boolean success) {
-        isSuccess = success;
-    }
-
-    public long getSequence() {
-        return sequence;
     }
 }

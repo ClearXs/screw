@@ -1,6 +1,5 @@
 package com.jw.screw.consumer;
 
-
 import com.jw.screw.common.future.AbstractInvokeFuture;
 
 import java.util.Arrays;
@@ -58,10 +57,6 @@ public class RepeatableFuture<V> extends AbstractInvokeFuture<V> {
 
     public void submit() {
         taskExecutor.submit(this);
-    }
-
-    public void stop() {
-        taskExecutor.shutdownNow();
     }
 
     public String getMethodName() {

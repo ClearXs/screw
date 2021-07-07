@@ -12,22 +12,15 @@
     <artifactId>screw-monitor</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>screw-agent</module>
-        <module>screw-metrics</module>
-        <module>screw-opentracing</module>
+        <module>screw-monitor-agent</module>
+        <module>screw-monitor-api</module>
         <module>screw-monitor-core</module>
+        <module>screw-monitor-opentracing</module>
+        <module>screw-monitor-remote</module>
     </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <micrometer.version>1.5.6</micrometer.version>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.jw.screw</groupId>
-            <artifactId>screw-provider</artifactId>
-        </dependency>
-    </dependencies>
 </project>

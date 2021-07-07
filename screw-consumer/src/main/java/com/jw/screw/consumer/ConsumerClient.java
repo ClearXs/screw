@@ -1,17 +1,21 @@
 package com.jw.screw.consumer;
 
+import com.jw.screw.common.metadata.RegisterMetadata;
 import com.jw.screw.common.metadata.ServiceMetadata;
 import com.jw.screw.common.model.Tuple;
 import com.jw.screw.common.transport.body.AcknowledgeBody;
+import com.jw.screw.common.transport.body.RegisterBody;
+import com.jw.screw.common.util.Collections;
+import com.jw.screw.monitor.api.ScrewMonitor;
 import com.jw.screw.remote.Protocol;
 import com.jw.screw.remote.modle.RemoteTransporter;
 import com.jw.screw.remote.netty.NettyClient;
-import com.jw.screw.remote.netty.config.NettyClientConfig;
 import com.jw.screw.remote.netty.processor.NettyProcessor;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,8 +31,10 @@ public class ConsumerClient extends NettyClient {
 
     private final NettyConsumer nettyConsumer;
 
-    public ConsumerClient(NettyClientConfig registerConfig, NettyConsumer nettyConsumer) {
-        super(registerConfig);
+    private ScrewMonitor monitor;
+
+    public ConsumerClient(NettyConsumerConfig config, NettyConsumer nettyConsumer) {
+        super(config.getRegistryConfig());
         this.nettyConsumer = nettyConsumer;
     }
 
@@ -41,11 +47,21 @@ public class ConsumerClient extends NettyClient {
     }
 
     @Override
-    protected void processRemoteResponse(ChannelHandlerContext ctx, RemoteTransporter request) {
+    public void processRemoteResponse(ChannelHandlerContext ctx, RemoteTransporter request) {
         byte code = request.getCode();
         // 与RESPONSE_SUBSCRIBE使用同一个线程池与处理器
         if (code == Protocol.Code.SERVICE_OFFLINE) {
             code = Protocol.Code.RESPONSE_SUBSCRIBE;
+        }
+        // 监控客户端处理
+        if (code == Protocol.Code.MONITOR_ADDRESS) {
+            RegisterBody body = (RegisterBody) request.getBody();
+            List<RegisterMetadata> registerMetadata = body.getRegisterMetadata();
+            if (monitor != null && Collections.isNotEmpty(registerMetadata)) {
+                monitor.setMonitorAddress(registerMetadata.toArray(new RegisterMetadata[] {}));
+            } else if (monitor != null) {
+                monitor.connectionAddress();
+            }
         }
         Tuple<NettyProcessor, ExecutorService> tuple = processTables.get(code);
         if (tuple == null) {
@@ -66,6 +82,8 @@ public class ConsumerClient extends NettyClient {
                         if (ackTransport != null) {
                             ctx.channel().writeAndFlush(ackTransport);
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     } finally {
                         listenerLock.unlock();
                     }
@@ -102,5 +120,15 @@ public class ConsumerClient extends NettyClient {
                 counter.set(reConnectCounter);
             }
         };
+    }
+
+    public void setMonitor(ScrewMonitor monitor, String monitorServerKey) {
+        addInboundFilter(new SubscribeFilter(monitorServerKey) {
+            @Override
+            protected void handle(List<RegisterMetadata> registerMetadata) {
+                monitor.setMonitorAddress(registerMetadata.toArray(new RegisterMetadata[]{}));
+            }
+        });
+        this.monitor = monitor;
     }
 }

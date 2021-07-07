@@ -20,12 +20,15 @@ public class ServiceWrapperContainer implements WrapperContainer<ServiceWrapper>
 
     private final ConcurrentHashMap<String, ServiceWrapper> wrappers = new ConcurrentHashMap<>();
 
+    private final LinkedBlockingQueue<ServiceWrapper> wrapperList = new LinkedBlockingQueue<>();
+
     @Override
     public void registerWrapper(String name, ServiceWrapper wrapper) {
         if (logger.isDebugEnabled()) {
             logger.debug("register service wrapper {}", wrapper);
         }
         wrappers.put(name, wrapper);
+        wrapperList.add(wrapper);
     }
 
     @Override
@@ -35,13 +38,6 @@ public class ServiceWrapperContainer implements WrapperContainer<ServiceWrapper>
 
     @Override
     public LinkedBlockingQueue<ServiceWrapper> wrappers() {
-        if (wrappers.size() < 1) {
-            return null;
-        }
-        LinkedBlockingQueue<ServiceWrapper> wrapperList = new LinkedBlockingQueue<>();
-        for (Map.Entry<String, ServiceWrapper> wrapperEntry : wrappers.entrySet()) {
-            wrapperList.add(wrapperEntry.getValue());
-        }
         return wrapperList;
     }
 

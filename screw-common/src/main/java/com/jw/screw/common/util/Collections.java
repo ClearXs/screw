@@ -17,7 +17,6 @@ public class Collections {
         return elements instanceof Collections
                 ? new ArrayList<E>((Collection<? extends E>) elements)
                 : newArrayList(elements.iterator());
-
     }
 
     public static <E> ArrayList<E> newArrayList(Iterator<? extends E> elements) {
@@ -40,6 +39,17 @@ public class Collections {
         }
         Collection<V> values = map.values();
         return newArrayList(values.iterator());
+    }
+
+    public static <T> List<String> toList(T[] array) {
+        List<String> list = new ArrayList<>();
+        if (array == null || array.length == 0) {
+            return list;
+        }
+        for (T t : array) {
+            list.add(t.toString());
+        }
+        return list;
     }
 
     public static <E> boolean isEmpty(Collection<E> collection) {

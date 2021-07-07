@@ -71,10 +71,10 @@
 
     <select id="queryByPage" resultMap="AppConfigVO">
         SELECT
-            <include refid="appConfigColumns"/>,
-            <include refid="appServerColumns"/>
+        <include refid="appConfigColumns"/>,
+        <include refid="appServerColumns"/>
         FROM
-            T_APP_CONFIG c
+        T_APP_CONFIG c
         LEFT JOIN T_APP_SERVER s ON s.ID = c.SERVER_ID
         <where>
             <if test="queryDTO.configName != null and queryDTO.configName != ''">
@@ -95,7 +95,7 @@
             AND c.DELETED != 1
         </where>
         ORDER BY
-            c.CREATE_TIME DESC
+        c.CREATE_TIME DESC
     </select>
 
     <select id="isExist" resultType="java.lang.Integer">

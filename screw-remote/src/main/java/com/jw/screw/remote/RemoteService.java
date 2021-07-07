@@ -2,9 +2,13 @@ package com.jw.screw.remote;
 
 import com.jw.screw.common.exception.RemoteSendException;
 import com.jw.screw.common.exception.RemoteTimeoutException;
+import com.jw.screw.common.transport.body.RequestBody;
+import com.jw.screw.remote.filter.Filter;
 import com.jw.screw.remote.modle.RemoteTransporter;
+import com.jw.screw.remote.netty.AbstractNettyService;
 import com.jw.screw.remote.netty.processor.NettyProcessor;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 
 import java.util.concurrent.ExecutorService;
 
@@ -16,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 public interface RemoteService {
 
     /**
-     * 初始化一些配置
+     * 初始化远程 server/client
      */
     void init();
 
@@ -27,6 +31,7 @@ public interface RemoteService {
 
     /**
      * 并不使用强制关闭
+     * @throws InterruptedException
      */
     void shutdownGracefully() throws InterruptedException;
 
@@ -40,11 +45,17 @@ public interface RemoteService {
 
     /**
      * 实现未阻塞的异步调用
-     * @param channel
-     * @param request
-     * @return
+     * @param channel {@link Channel}
+     * @param request {@link RemoteTransporter} {@link RequestBody}
+     * @param returnType {@link Class} 期望返回值的类型
+     * @return 一个promise对象，详细见{@link AbstractNettyService.AsyncPromise}
      */
     Object asyncInvoke(Channel channel, RemoteTransporter request, Class<?> returnType);
+
+    /**
+     * 关闭业务处理器器线程池
+     */
+    void shutdownProcessors();
 
     /**
      * 对于服务提供者，需要注册远程调用的处理器
@@ -54,4 +65,33 @@ public interface RemoteService {
      * @param exec 处理业务逻辑的线程池
      */
     void registerProcessors(byte code, NettyProcessor processor, ExecutorService exec);
+
+    /**
+     * 处理请求，由于这一部分需要耗费的时间比较久，所以针对每一类请求开启对应的线程池
+     * 1.注册请求
+     * 2.订阅请求
+     * 3.远程调用请求。。
+     * @param ctx {@link ChannelHandlerContext}
+     * @param transporter {@link RemoteTransporter}
+     */
+    void processRemoteRequest(ChannelHandlerContext ctx, RemoteTransporter transporter);
+
+    /**
+     * 处理rpc的响应
+     * @param ctx {@link ChannelHandlerContext}
+     * @param transporter {@link RemoteTransporter}
+     */
+    void processRemoteResponse(ChannelHandlerContext ctx, RemoteTransporter transporter);
+
+    /**
+     * 添加入站过滤器
+     * @param filters {@link Filter}
+     */
+    void addInboundFilter(Filter... filters);
+
+    /**
+     * 添加出站过滤器
+     * @param filters {@link Filter}
+     */
+    void addOutboundFilter(Filter... filters);
 }

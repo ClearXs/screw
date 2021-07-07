@@ -3,6 +3,7 @@ package com.jw.screw.admin.sys.datasource.service;
 
 import com.jw.screw.admin.common.exception.BasicOperationException;
 import com.jw.screw.admin.sys.datasource.dto.DatasourceAddDTO;
+import com.jw.screw.admin.sys.datasource.dto.DatasourceDTO;
 import com.jw.screw.admin.sys.datasource.dto.DatasourceUpdateDTO;
 import com.jw.screw.admin.sys.datasource.model.DatasourceVO;
 
@@ -29,7 +30,7 @@ public interface DatasourceService {
     /**
      * 删除数据源
      */
-    Integer deleteDatasource(String id) throws BasicOperationException;
+    Integer deleteDatasource(String ids) throws BasicOperationException;
 
     /**
      * 查找所有数据源
@@ -39,5 +40,7 @@ public interface DatasourceService {
     /**
      * 测试数据库连接
      */
-    boolean testConnection(String dataSourceId);
+    boolean testConnection(String dataSourceIds) throws Exception;
+
+    boolean testConnection(DatasourceDTO datasource) throws Exception;
 }

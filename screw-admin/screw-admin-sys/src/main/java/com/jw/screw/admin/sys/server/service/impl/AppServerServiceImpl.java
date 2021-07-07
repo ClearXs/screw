@@ -27,6 +27,7 @@ import com.jw.screw.admin.sys.server.dto.AppServerUpdateDTO;
 import com.jw.screw.admin.sys.server.entity.AppServer;
 import com.jw.screw.admin.sys.server.model.AppServerVO;
 import com.jw.screw.admin.sys.server.service.AppServerService;
+import com.zzht.patrol.screw.common.constant.StringPool;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -74,7 +75,7 @@ public class AppServerServiceImpl implements AppServerService {
             appServer.setSystemId(UniqueIdUtils.getId());
         }
         if (StringUtils.isEmpty(appServer.getSystemName())) {
-            appServer.setSystemName("项目");
+            appServer.setSystemName("应用");
         }
         Validators.doResult(appServerDao.insert(appServer));
         // 查看添加是否有配置，如果有，则取它已经发布的版本的数据（或许存在未发布但已经编辑的）
@@ -112,9 +113,6 @@ public class AppServerServiceImpl implements AppServerService {
                         .stream()
                         .filter(version -> ConfigVersionConstant.NON_DEPLOY.equals(version.getConfigVersionStatus()))
                         .collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(nonDeployVersions)) {
-                    throw new UnknowOperationException("配置：" + config.getConfigName() + "，没有未发布版本，请检查相关配置");
-                }
                 for (AppConfigVersion nonDeployVersion : nonDeployVersions) {
                     versionAndDataCopy(config, nonDeployVersion);
                 }
@@ -190,9 +188,17 @@ public class AppServerServiceImpl implements AppServerService {
     }
 
     @Override
-    public List<AppServerVO> queryAppServers() {
-        List<AppServerVO> appServerVOS = appServerDao.listAll();
-        return appServerVOS;
+    public List<AppServerVO> queryAppServers() throws IllegalAccessException, InstantiationException {
+        List<AppServerVO> appServers = appServerDao.listAll();
+        for (AppServerVO appServerVO : appServers) {
+            String dataSourceId = appServerVO.getDataSourceId();
+            if (!StringUtils.isEmpty(dataSourceId)) {
+                List<Datasource> datasourceList = datasourceDao.selectList(new QueryWrapper<Datasource>().in("ID", dataSourceId.split(StringPool.COMMA)));
+                List<DatasourceVO> datasourceVOList = new EntityFactoryBuilder<DatasourceVO>().setEntityClass(DatasourceVO.class).build(datasourceList.toArray());
+                appServerVO.setDatasourceVO(datasourceVOList);
+            }
+        }
+        return appServers;
     }
 
     @Override
@@ -209,12 +215,11 @@ public class AppServerServiceImpl implements AppServerService {
         // 查找数据源
         String dataSourceId = serverVO.getDataSourceId();
         if (!StringUtils.isEmpty(dataSourceId)) {
-            Datasource datasource = datasourceDao.selectOne(new QueryWrapper<Datasource>().eq("ID", dataSourceId));
+            List<Datasource> datasource = datasourceDao.selectList(new QueryWrapper<Datasource>().in("ID", dataSourceId));
             if (!ObjectUtils.isEmpty(datasource)) {
-                DatasourceVO datasourceVO = new EntityFactoryBuilder<DatasourceVO>()
+                List<DatasourceVO> datasourceVO = new EntityFactoryBuilder<DatasourceVO>()
                         .setEntityClass(DatasourceVO.class)
-                        .setVo(datasource)
-                        .build();
+                        .build(datasource.toArray());
                 serverVO.setDatasourceVO(datasourceVO);
             }
         }
@@ -223,14 +228,17 @@ public class AppServerServiceImpl implements AppServerService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Integer deleteAppServerById(String serverId) throws BasicOperationException {
-        List<AppConfig> appConfigs = appConfigDao.selectList(new QueryWrapper<AppConfig>().eq("SERVER_ID", serverId));
-        if (!CollectionUtils.isEmpty(appConfigs)) {
-            for (AppConfig appConfig : appConfigs) {
-                appConfigService.deleteAppConfig(appConfig.getId());
+    public Integer deleteAppServerById(String serverIds) throws BasicOperationException {
+        String[] serverIdArray = serverIds.split(StringPool.COMMA);
+        for (String serverId : serverIdArray) {
+            List<AppConfig> appConfigs = appConfigDao.selectList(new QueryWrapper<AppConfig>().eq("SERVER_ID", serverId));
+            if (!CollectionUtils.isEmpty(appConfigs)) {
+                for (AppConfig appConfig : appConfigs) {
+                    appConfigService.deleteAppConfig(appConfig.getId());
+                }
             }
+            Validators.doResult(appServerDao.deleteById(serverId));
         }
-        Validators.doResult(appServerDao.deleteById(serverId));
         return DataOperationState.SUCCESSFUL;
     }
 
@@ -254,19 +262,16 @@ public class AppServerServiceImpl implements AppServerService {
                         .setVo(server)
                         .setEntityClass(AppServerVO.class)
                         .build();
-                // 如果是需要获取默认服务，那么查找服务下的配置
-                if (AppServerConstant.DataOperate.DEFAULT.equals(operate)) {
-                    List<AppConfig> appConfigs = appConfigDao.selectList(new QueryWrapper<AppConfig>().eq("SERVER_ID", serverVO.getId()));
-                    List<AppConfigVO> appConfigVOList = new ArrayList<>();
-                    for (AppConfig appConfig : appConfigs) {
-                        AppConfigVO appConfigVO = new EntityFactoryBuilder<AppConfigVO>()
-                                .setVo(appConfig)
-                                .setEntityClass(AppConfigVO.class)
-                                .build();
-                        appConfigVOList.add(appConfigVO);
-                    }
-                    serverVO.setAppConfigVO(appConfigVOList);
+                List<AppConfig> appConfigs = appConfigDao.selectList(new QueryWrapper<AppConfig>().eq("SERVER_ID", serverVO.getId()));
+                List<AppConfigVO> appConfigVOList = new ArrayList<>();
+                for (AppConfig appConfig : appConfigs) {
+                    AppConfigVO appConfigVO = new EntityFactoryBuilder<AppConfigVO>()
+                            .setVo(appConfig)
+                            .setEntityClass(AppConfigVO.class)
+                            .build();
+                    appConfigVOList.add(appConfigVO);
                 }
+                serverVO.setAppConfigVO(appConfigVOList);
                 serverVOList.add(serverVO);
             }
             directories.put(menu, serverVOList);

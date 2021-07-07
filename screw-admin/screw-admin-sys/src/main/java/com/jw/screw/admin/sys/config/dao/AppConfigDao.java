@@ -14,7 +14,13 @@ import java.util.List;
 @Mapper
 public interface AppConfigDao extends BaseMapper<AppConfig>, ExistMapper {
 
-    List<AppConfigVO> queryByPage(Page<AppConfigVO> page, @Param("queryDTO") AppConfigQueryDTO appConfigQueryDTO);
+    /**
+     * 查询分页
+     * @param page {@link Page}
+     * @param appConfigQueryDTO {@link AppConfigQueryDTO}
+     * @return {@link AppConfigVO}
+     */
+    List<AppConfigVO> queryByPage(Page<AppConfigVO> page, @Param("queryDTO")AppConfigQueryDTO appConfigQueryDTO);
 
     @Override
     int isExist(@Param("whereSql") String whereSql);

@@ -61,7 +61,8 @@ export interface AppConfigData {
     deleted?: string;string
     version?: number;
     isDraw: boolean;
-    configVersion: AppConfigVersion;
+    index?: number;
+    configVersion?: AppConfigVersion;
 }
 
 export interface AppConfigDataQueryParams extends PageParams {

@@ -18,13 +18,16 @@ public interface InvokeFuture<V> extends RunnableFuture<V> {
 
     /**
      * 阻塞获取结果（默认30s），获取成功后通知那些监听的线程。
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws TimeoutException
      */
     V getResult() throws ExecutionException, InterruptedException, TimeoutException;
 
     /**
      * 按照指定的事件获取结果
-     * @param millis
-     * @return
+     * @param millis 阻塞时间
+     * @return 异步结果
      */
     V getResult(long millis) throws InterruptedException, ExecutionException, TimeoutException;
 
