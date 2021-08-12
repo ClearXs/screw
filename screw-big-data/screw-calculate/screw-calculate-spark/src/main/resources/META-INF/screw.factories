@@ -1,0 +1,3 @@
+com.jw.screw.storage.recoder.Recoder=\
+com.jw.screw.calculate.spark.recoder.DatabaseSourceRecoder,\
+com.jw.screw.calculate.spark.recoder.ESSourceRecoder,\

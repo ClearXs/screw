@@ -8,7 +8,7 @@ import com.jw.screw.common.transport.RemoteAddress;
 import com.jw.screw.common.util.Requires;
 import com.jw.screw.monitor.remote.MonitorProvider;
 import com.jw.screw.provider.NettyProviderConfig;
-import com.jw.screw.remote.Remotes;
+import com.jw.screw.common.util.Remotes;
 import com.jw.screw.remote.netty.config.GlobeConfig;
 import com.jw.screw.remote.netty.config.NettyClientConfig;
 import com.jw.screw.spring.anntation.ScrewValue;

@@ -199,5 +199,39 @@ public class Protocol {
          * 监控中心地址
          */
         byte MONITOR_ADDRESS = 76;
+
+        static String transfer(byte code) {
+            if (code == UNKNOWN) {
+                return "未知的类型";
+            } else if (code == FAILED) {
+                return "未知的情况时";
+            } else if (code == HEART_BEATS) {
+                return "心跳";
+            } else if (code == RPC_REQUEST) {
+                return "远程请求的调用";
+            } else if (code == RPC_RESPONSE) {
+                return "远程调用的响应";
+            } else if (code == SERVICE_REGISTER) {
+                return "生产者服务注册";
+            } else if (code == SERVICE_SUBSCRIBE) {
+                return "消费者服务订阅";
+            } else if (code == RESPONSE_SUBSCRIBE) {
+                return "注册中心响应订阅";
+            } else if (code == SERVICE_OFFLINE) {
+                return "服务下线通知";
+            } else if (code == UNICAST) {
+                return "单播";
+            } else if (code == BROADCAST) {
+                return "广播";
+            } else if (code == METRICS) {
+                return "性能指标";
+            } else if (code == TRACING) {
+                return "链路追踪";
+            } else if (code == MONITOR_ADDRESS) {
+                return "监控中心地址";
+            } else {
+                return "UNKNOWN";
+            }
+        }
     }
 }

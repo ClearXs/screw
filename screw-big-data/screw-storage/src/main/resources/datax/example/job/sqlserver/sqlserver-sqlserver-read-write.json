@@ -1,0 +1,59 @@
+{
+    "job": {
+        "setting": {
+            "speed": {
+                 "channel": 10
+            },
+            "errorLimit": {
+                "record": 100000,
+                "percentage": 0.02
+            }
+        },
+        "content": [
+            {
+                "reader": {
+                    "name": "sqlserverreader",
+                    "parameter": {
+                        "username": "sa",
+                        "password": "W5f37fcu8h!",
+                        "column": [
+                            "*"
+                        ],
+                        "splitPk": "gid",
+                        "connection": [
+                            {
+                                "table": [
+                                    "szgs_lin"
+                                ],
+                                "jdbcUrl": ["jdbc:sqlserver://39.98.150.170:1433;DatabaseName=yf-wqcp-gis;integratedSecurity=false"],
+                            }
+                        ]
+                    }
+                },
+                "writer": {
+                    "name": "sqlserverwriter",
+                    "parameter": {
+                        "username": "sa",
+                        "password": "123456",
+                        "column": [
+							"*"
+                        ],
+                        "preSql": [
+							"delete from szgs_lin",
+                        ],
+						"postSql": [
+						],
+                        "connection": [
+                            {
+                                "jdbcUrl": "jdbc:sqlserver://localhost:1433;DatabaseName=test;integratedSecurity=false",
+                                "table": [
+                                    "szgs_lin"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+}

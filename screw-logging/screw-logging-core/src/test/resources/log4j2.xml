@@ -1,0 +1,19 @@
+<configuration status="INFO" monitorInterval="30">
+    <appenders>
+        <!--这个输出控制台的配置-->
+        <console name="Console" target="SYSTEM_OUT">
+            <!--输出日志的格式-->
+            <PatternLayout pattern="%highlight{[ %p ] [%-d{yyyy-MM-dd HH:mm:ss}] [%l] %m%n}"/>
+        </console>
+
+        <ScrewAppender name="screwAppender" appName="本地日志输出" enable="false">
+            <LevelRangeFilter minLevel="FATAL" maxLevel="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </ScrewAppender>
+    </appenders>
+    <loggers>
+        <root level="INFO">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="screwAppender"/>
+        </root>
+    </loggers>
+</configuration>

@@ -17,9 +17,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @since 1.0
  */
 @EnableTransactionManagement
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class}, scanBasePackages = {"com.jw.screw.admin", "com.jw.screw.admin.api" })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class}, scanBasePackages = {"com.jw.screw.admin", "com.jw.screw.admin.sys" })
 @EnableScrewMonitor
-@EnableScrewProvider(serverKey = "config_center", serverPort = 8601, monitorKey = "monitor_center", isConfigCenter = true)
+@EnableScrewProvider(serverKey = "config_center", serverPort = 8601, isConfigCenter = true)
 @EnableScrewRegistry
 public class AdminApplication extends SpringBootServletInitializer {
 

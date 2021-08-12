@@ -1,5 +1,5 @@
 mybatis-plus:
-  mapper-locations: classpath*:com/jw/screw/admin/sys/**/mapper/*.xml
+  mapper-locations: classpath*:com/jw/screw/admin/**/mapper/*.xml
   global-config:
     db-config:
       # 逻辑删除值 1.删除 0.
@@ -16,8 +16,6 @@ server:
   undertow:
     buffer-size: 1024
     direct-buffers: true
-    io-threads: 16
-    worker-threads: 256
 spring:
   application:
     name: screw-admin

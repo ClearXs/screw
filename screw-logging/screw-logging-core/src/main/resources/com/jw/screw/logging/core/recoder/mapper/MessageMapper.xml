@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jw.screw.logging.core.recoder.mapper.MessageMapper">
+    <resultMap id="messageMap" type="com.jw.screw.logging.core.model.Message">
+        <id column="id" property="id"/>
+        <result column="source" property="source" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="content" property="content"/>
+        <result column="create_time" property="createTime"/>
+        <result column="transfer_type" property="transferType"/>
+        <result column="host" property="host"/>
+        <result column="trace_id" property="traceId" />
+    </resultMap>
+
+    <sql id="columns">
+        id, source, type, content, create_time, transfer_type, host, trace_id
+    </sql>
+
+    <select id="selectAll" resultMap="messageMap">
+        SELECT <include refid="columns"/> FROM screw_log
+    </select>
+
+    <select id="selectOneById" resultMap="messageMap">
+        SELECT <include refid="columns"/>
+        FROM screw_log
+        <where>
+            id = #{id}
+        </where>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO screw_log(<include refid="columns"/>) VALUES (#{id}, #{source}, #{type}, #{content}, #{createTime}, #{transferType}, #{host}, #{traceId})
+    </insert>
+
+    <select id="query" parameterType="com.jw.screw.storage.QueryFilter" resultMap="messageMap">
+        SELECT <include refid="columns"/>
+        FROM screw_log
+        <where>
+            <if test="entity.source != null and entity.source != ''">
+                source = #{entity.source}
+            </if>
+            <if test="entity.type != null and entity.type != ''">
+                type = #{entity.type}
+            </if>
+            <if test="entity.content != null and entity.content != ''">
+                content LIKE "%"#{entity.content}"%"
+            </if>
+            <if test="entity.transferType != null and entity.transferType != ''">
+                transfer_type = #{entity.transferType}
+            </if>
+            <if test="entity.source != null and entity.source != ''">
+                source = #{entity.source}
+            </if>
+            <if test="entity.createTime != null">
+                create_time >= #{entity.createTime}
+            </if>
+        </where>
+        LIMIT  #{offset}, #{pageSize}
+    </select>
+</mapper>

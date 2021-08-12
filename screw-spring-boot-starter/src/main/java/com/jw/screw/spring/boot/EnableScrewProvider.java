@@ -60,7 +60,7 @@ public @interface EnableScrewProvider {
     /**
      * 监控中心
      */
-    String monitorKey() default "";
+    String monitorKey() default "monitor_center";
 
     /**
      * 监控指标收集周期 unit second

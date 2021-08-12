@@ -9,7 +9,6 @@
     </parent>
 
     <artifactId>screw-admin-web</artifactId>
-    <packaging>jar</packaging>
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>

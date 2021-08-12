@@ -1,0 +1,7 @@
+com.jw.screw.storage.recoder.Recoder=\
+com.jw.screw.logging.core.recoder.DatabaseMessageRecoder,\
+com.jw.screw.logging.core.recoder.ESMessageRecoder,\
+com.jw.screw.logging.core.recoder.FileMessageRecoder,\
+com.jw.screw.logging.core.recoder.HiveMessageRecoder,\
+com.jw.screw.logging.core.recoder.MemoryMessageRecoder,\
+com.jw.screw.logging.core.recoder.RedisMessageRecoder,\

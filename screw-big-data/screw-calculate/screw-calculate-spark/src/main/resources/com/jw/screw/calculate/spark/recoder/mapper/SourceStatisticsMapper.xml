@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jw.screw.calculate.spark.recoder.mapper.SourceStatisticsMapper">
+    <resultMap id="sourceMap" type="com.jw.screw.calculate.spark.model.SourceStatistics">
+        <id column="id" property="id"/>
+        <result column="source" property="source"/>
+        <result column="statistic_time" property="statisticTime"/>
+        <result column="count" property="count"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, source, statistic_time, count, start_time, end_time
+    </sql>
+
+    <insert id="insert">
+        INSERT INTO source_statistics(<include refid="columns"/>) VALUES (#{id}, #{source}, #{statisticTime}, #{count}, #{startTime}, #{endTime})
+    </insert>
+
+    <select id="query" resultMap="sourceMap">
+        SELECT <include refid="columns"/> FROM source_statistics s
+        <where>
+            <if test="entity.startTime != null and entity.endTime != null">
+                s.start_time &gt;= #{entity.startTime}
+                AND
+                s.end_time &lt;= #{entity.endTime}
+            </if>
+            <if test="entity.source != null and entity.source != ''">
+                AND s.source = #{entity.source}
+            </if>
+        </where>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+</mapper>

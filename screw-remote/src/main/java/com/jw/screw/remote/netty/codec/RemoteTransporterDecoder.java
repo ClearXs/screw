@@ -1,9 +1,14 @@
 package com.jw.screw.remote.netty.codec;
 
+import com.alibaba.fastjson.JSON;
 import com.jw.screw.common.exception.RemoteException;
 import com.jw.screw.common.serialization.SerializerHolders;
+import com.jw.screw.logging.core.constant.LogSource;
+import com.jw.screw.logging.core.model.Message;
 import com.jw.screw.remote.Protocol;
 import com.jw.screw.remote.modle.RemoteTransporter;
+import com.jw.screw.storage.Executor;
+import com.jw.screw.storage.ExecutorHousekeeper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ReplayingDecoder;
@@ -50,6 +55,14 @@ public class RemoteTransporterDecoder extends ReplayingDecoder<Protocol.State> {
                 RemoteTransporter remoteTransporter = SerializerHolders.serializer().deserialization(bytes, RemoteTransporter.class);
                 if (logger.isDebugEnabled()) {
                     logger.debug("decode remote transporter: {}", remoteTransporter);
+                }
+                Message message = new Message();
+                message.setContent(JSON.toJSONString(remoteTransporter));
+                message.setSource(LogSource.RPC);
+                message.setType(Protocol.Code.transfer(remoteTransporter.getCode()));
+                Executor executor = ExecutorHousekeeper.getExecutor();
+                if (executor != null) {
+                    executor.record(Message.class, message);
                 }
                 if (remoteTransporter.getCode() != Protocol.Code.HEART_BEATS) {
                     out.add(remoteTransporter);

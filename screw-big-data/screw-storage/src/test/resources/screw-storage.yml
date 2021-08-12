@@ -1,0 +1,51 @@
+# 是否开启
+enable: true
+# 持久性策略，支持以逗号分别，使用不同的存储引擎存储
+read-persistence: db # 0.memory 1.file 2.db 3.redis 4.es 5.hive
+write-persistence: db # 0.memory 1.file 2.db 3.redis 4.es 5.hive
+memory:
+  capacity: 16
+  loadFactor: 0.75
+  concurrencyLevel: 1
+# db
+database:
+  driver-class-name: com.mysql.jdbc.Driver
+  initial-size: 5
+  max-active: 10
+  min-idle: 5
+  username: root
+  password: 123456
+  url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf-8&serverTimezone=Hongkong
+# redis
+redis:
+  host: 121.5.37.140
+  port: 6379
+  database: 0
+# es
+es:
+  index: screw_log_index
+  hostname: 121.5.37.140
+  port: 9200
+  scheme: http
+file:
+  print-path: D://temp//logs
+  file-suffix: .txt
+  accumulation: 10
+  split: ","
+# 继承自file
+hive:
+  print-path: D://temp//logs
+  file-suffix: .txt
+  accumulation: 10
+  user: root
+  password:
+  url: jdbc:hive2://localhost:9999/log_db
+  driver-class-name: org.apache.hive.jdbc.HiveDriver
+  table-name: logs
+
+datax:
+  enable: true
+  job-files: D:\tools\datax\datax\bin\job\sqlserver\sqlserver-mysql-read-write.json
+  datax-path: D:\tools\datax\datax\bin
+  job-corn: 0/5 * * * * ?
+  check-sql: select * from ${table}

@@ -17,7 +17,7 @@ import com.jw.screw.monitor.core.body.MetricsBody;
 import com.jw.screw.monitor.core.mircometer.Metrics;
 import com.jw.screw.monitor.core.mircometer.MetricsObjectFactory;
 import com.jw.screw.remote.Protocol;
-import com.jw.screw.remote.Remotes;
+import com.jw.screw.common.util.Remotes;
 import com.jw.screw.remote.modle.RemoteTransporter;
 import com.jw.screw.remote.netty.NettyChannelGroup;
 import com.jw.screw.remote.netty.NettyClient;

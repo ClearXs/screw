@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.jw.screw.logging.spring.boot.starter.ScrewLoggerConfiguration

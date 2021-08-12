@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
 @Configuration
-@MapperScan("com.jw.admin.sys.*.mapper")
+@MapperScan("com.jw.screw.admin.sys.*.dao")
 public class MybatisPlusConfig {
 
     /**

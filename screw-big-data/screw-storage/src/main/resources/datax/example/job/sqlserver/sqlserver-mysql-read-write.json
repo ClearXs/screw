@@ -1,0 +1,68 @@
+{
+	"info": {
+		"modtime": {
+			"value": "select max(modtime) from gtws_net",
+			"type": "database",
+			"readBy": "writer"
+		}
+	},
+    "job": {
+        "setting": {
+            "speed": {
+                 "channel": 3
+            },
+            "errorLimit": {
+                "record": 0,
+                "percentage": 0.02
+            }
+        },
+        "content": [
+            {
+                "reader": {
+                    "name": "sqlserverreader",
+                    "parameter": {
+                        "username": "sa",
+                        "password": "123456",
+                        "column": [
+                            "*"
+                        ],
+						"where": "modtime>'${modtime}'",
+                        "splitPk": "gid",
+                        "connection": [
+                            {
+                                "table": [
+                                    "gtws_net"
+                                ],
+                                "jdbcUrl": ["jdbc:sqlserver://localhost:1433;DatabaseName=test;integratedSecurity=false"],
+                            }
+                        ]
+                    }
+                },
+                "writer": {
+                    "name": "mysqlwriter",
+                    "parameter": {
+                        "writeMode": "update",
+                        "username": "root",
+                        "password": "123456",
+                        "column": [
+							"*"
+                        ],
+                        "session": [
+                        	"set session sql_mode='ANSI'"
+                        ],
+                        "preSql": [
+                        ],
+                        "connection": [
+                            {
+                                "jdbcUrl": "jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf-8",
+                                "table": [
+                                    "gtws_net"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+}

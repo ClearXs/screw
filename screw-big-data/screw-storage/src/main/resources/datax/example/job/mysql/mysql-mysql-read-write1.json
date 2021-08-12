@@ -1,0 +1,63 @@
+{
+    "job": {
+        "setting": {
+            "speed": {
+                 "channel": 8
+            },
+            "errorLimit": {
+                "record": 0,
+                "percentage": 0.02
+            }
+        },
+        "content": [
+            {
+                "reader": {
+                    "name": "mysqlreader",
+                    "parameter": {
+                        "username": "root",
+                        "password": "123456",
+                        "column": [
+							"id",
+							"name",
+							"name1"
+                        ],
+                        "connection": [
+                            {
+                                "table": [
+                                    "test"
+                                ],
+                                "jdbcUrl": [
+     "jdbc:mysql://127.0.0.1:3306/test"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "writer": {
+                    "name": "mysqlwriter",
+                    "parameter": {
+                        "writeMode": "insert",
+                        "username": "root",
+                        "password": "123456",
+                        "column": [
+							"id",
+							"name",
+							"name132"
+                        ],
+                        "session": [
+                        	"set session sql_mode='ANSI'"
+                        ],
+                        "connection": [
+                            {
+                                "jdbcUrl": "jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=utf-8",
+                                "table": [
+                                    "test2"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+}

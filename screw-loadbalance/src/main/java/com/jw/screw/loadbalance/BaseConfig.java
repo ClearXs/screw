@@ -1,7 +1,7 @@
 package com.jw.screw.loadbalance;
 
 import com.jw.screw.common.SConfig;
-import com.jw.screw.remote.Remotes;
+import com.jw.screw.common.util.Remotes;
 
 import java.util.concurrent.TimeUnit;
 

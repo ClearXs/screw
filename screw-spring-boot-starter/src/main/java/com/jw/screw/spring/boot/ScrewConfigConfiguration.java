@@ -3,6 +3,7 @@ package com.jw.screw.spring.boot;
 import com.jw.screw.spring.ScrewSpringProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 /**
  * 配置中心配置类
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class ScrewConfigConfiguration {
 
     @Bean
+    @DependsOn("screwRegistry")
     public ScrewSpringProvider screwConfig() {
         return new ScrewSpringProvider();
     }

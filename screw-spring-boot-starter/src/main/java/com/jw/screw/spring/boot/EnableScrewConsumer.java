@@ -25,7 +25,7 @@ public @interface EnableScrewConsumer {
     /**
      * 服务key
      */
-    String serverKey();
+    String serverKey() default "";
 
     /**
      * 服务端口，如果当前服务作为provider那么作为consumer的端口一定与其相同。
@@ -55,12 +55,12 @@ public @interface EnableScrewConsumer {
     /**
      * 配置中心key，如果存在则填写
      */
-    String configKey() default "";
+    String configKey() default "config_center";
 
     /**
      * 监控中心key，如果存在则填写
      */
-    String monitorKey() default "";
+    String monitorKey() default "monitor_center";
 
     /**
      * 监控指标收集周期 unit Second

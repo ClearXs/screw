@@ -16,6 +16,11 @@
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-common</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-logging-core</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
