@@ -42,13 +42,10 @@ public class TaskCalculate {
     }
 
     public void start() {
-        calculator.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                long currentTimeMillis = System.currentTimeMillis();
-                calculateStatistic(lastExecuteTime.get());
-                lastExecuteTime.set(currentTimeMillis);
-            }
+        calculator.scheduleAtFixedRate(() -> {
+            long currentTimeMillis = System.currentTimeMillis();
+            calculateStatistic(lastExecuteTime.get());
+            lastExecuteTime.set(currentTimeMillis);
         }, delayTime(), 100, TimeUnit.SECONDS);
     }
 

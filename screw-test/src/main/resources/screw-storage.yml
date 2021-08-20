@@ -1,8 +1,12 @@
 # 是否开启
-enable: true
+enable: false
 # 持久性策略，支持以逗号分别，使用不同的存储引擎存储
-persistence: db # 0.memory 1.file 2.db 3.redis 4.es 5.hive
+read-persistence: db # 0.memory 1.file 2.db 3.redis 4.es 5.hive
+write-persistence: db # 0.memory 1.file 2.db 3.redis 4.es 5.hive
 memory:
+  capacity: 16
+  loadFactor: 0.75
+  concurrencyLevel: 1
 # db
 database:
   driver-class-name: com.mysql.jdbc.Driver
@@ -24,7 +28,7 @@ es:
   port: 9200
   scheme: http
 file:
-  print-path: D://logs
+  print-path: D://temp//logs
   file-suffix: .txt
   accumulation: 10
   split: ","

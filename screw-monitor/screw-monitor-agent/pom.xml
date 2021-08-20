@@ -22,12 +22,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${byte-buddy.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-monitor-opentracing</artifactId>
         </dependency>
@@ -40,6 +34,11 @@
         <dependency>
             <groupId>com.jw.screw</groupId>
             <artifactId>screw-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jw.screw</groupId>
+            <artifactId>screw-common</artifactId>
         </dependency>
     </dependencies>
 

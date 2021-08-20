@@ -1,6 +1,8 @@
 package com.jw.screw.consumer.model;
 
 import com.jw.screw.common.metadata.ServiceMetadata;
+import com.jw.screw.common.proxy.InvocationInterceptor;
+import com.jw.screw.common.proxy.ProxyFactory;
 import com.jw.screw.common.util.Requires;
 import com.jw.screw.consumer.ConnectionWatcher;
 import com.jw.screw.consumer.Consumer;
@@ -27,6 +29,10 @@ public class ProxyObjectFactory {
     private boolean isAsync = false;
 
     private final AtomicBoolean isAvailable = new AtomicBoolean(false);
+
+    private ProxyObjectFactory() {
+
+    }
 
     public static ProxyObjectFactory factory() {
         return new ProxyObjectFactory();
@@ -61,13 +67,12 @@ public class ProxyObjectFactory {
      */
     public <T> T newProxyInstance(final Class<T> clazz) {
         checkArguments();
-        Object proxy = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[]{ clazz }, new InvocationHandler() {
+        return ProxyFactory.proxy().newProxyInstance(clazz, new InvocationInterceptor() {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            public Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException {
                 return rpcInvoke(clazz.getSimpleName(), method.getName(), method.getReturnType(), args);
             }
         });
-        return clazz.cast(proxy);
     }
 
     /**

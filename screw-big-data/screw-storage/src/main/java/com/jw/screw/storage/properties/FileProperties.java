@@ -1,6 +1,6 @@
 package com.jw.screw.storage.properties;
 
-import com.zzht.patrol.screw.common.constant.StringPool;
+import com.jw.screw.common.constant.StringPool;
 import lombok.Data;
 
 @Data

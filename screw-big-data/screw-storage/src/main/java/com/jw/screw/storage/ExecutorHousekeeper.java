@@ -35,7 +35,7 @@ public class ExecutorHousekeeper {
      * @see #getExecutor(Class, Object...)
      */
     public static Executor getExecutor() {
-        return getExecutor(com.jw.screw.storage.BaseRecoderExecutor.class);
+        return getExecutor(BaseRecoderExecutor.class);
     }
 
     /**
@@ -43,7 +43,7 @@ public class ExecutorHousekeeper {
      * @see #getExecutor(Class, Object...)
      */
     public static Executor getExecutor(Object... args) {
-        return getExecutor(com.jw.screw.storage.BaseRecoderExecutor.class, args);
+        return getExecutor(BaseRecoderExecutor.class, args);
     }
 
     /**
@@ -65,7 +65,7 @@ public class ExecutorHousekeeper {
             }
             Executor executor = moreExecutors.get(constructor);
             if (executor == null) {
-                executor = com.jw.screw.storage.Executors.create(customizeExecutor);
+                executor = Executors.create(customizeExecutor);
             } else {
                 return executor;
             }
@@ -93,7 +93,7 @@ public class ExecutorHousekeeper {
                 Constructor<? extends Executor> constructor = clazz.getConstructor();
                 executor = moreExecutors.get(constructor);
                 if (executor == null) {
-                    executor = com.jw.screw.storage.Executors.create(clazz);
+                    executor = Executors.create(clazz);
                     moreExecutors.put(constructor, executor);
                 }
             } catch (NoSuchMethodException e) {
@@ -123,7 +123,7 @@ public class ExecutorHousekeeper {
                 Constructor<? extends Executor> constructor = clazz.getConstructor(classes);
                 executor = moreExecutors.get(constructor);
                 if (executor == null) {
-                    executor = com.jw.screw.storage.Executors.create(clazz, args);
+                    executor = Executors.create(clazz, args);
                     moreExecutors.put(constructor, executor);
                 }
             } catch (NoSuchMethodException e) {
