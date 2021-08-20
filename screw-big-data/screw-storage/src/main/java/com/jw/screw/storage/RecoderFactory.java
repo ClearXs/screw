@@ -117,7 +117,7 @@ public interface RecoderFactory {
             }
         }
         if (recoder == null) {
-            recoder = (Recoder<T>) newRecord0(clazz, args);
+            recoder = newRecord0(clazz, args);
         }
         if (recoder == null) {
             throw new NullPointerException(String.format("create failed %s", className));
@@ -132,6 +132,6 @@ public interface RecoderFactory {
      * @param <T> recode的泛型参数
      * @return 动态代理对象
      */
-    <T> Recoder<T> newRecord0(Class<T> clazz, Object... args);
+    <T> Recoder<T> newRecord0(Class<Recoder<T>> clazz, Object... args);
 
 }

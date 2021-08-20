@@ -41,26 +41,26 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author jiangw
  */
-public class NettyConsumer extends com.jw.screw.consumer.AbstractConsumer {
+public class NettyConsumer extends AbstractConsumer {
 
     private static Logger logger = LoggerFactory.getLogger(NettyConsumer.class);
 
-    private final com.jw.screw.consumer.NettyConsumerConfig consumerConfig;
+    private final NettyConsumerConfig consumerConfig;
 
     private ScrewMonitor monitor;
 
     public NettyConsumer() {
-        this(new com.jw.screw.consumer.NettyConsumerConfig());
+        this(new NettyConsumerConfig());
     }
 
-    public NettyConsumer(com.jw.screw.consumer.NettyConsumerConfig consumerConfig) {
+    public NettyConsumer(NettyConsumerConfig consumerConfig) {
         this.consumerConfig = consumerConfig;
         NettyClientConfig rpcConfig = consumerConfig.getRpcConfig();
         if (rpcConfig == null) {
             rpcConfig = new NettyClientConfig();
             consumerConfig.setRpcConfig(rpcConfig);
         }
-        this.rpcClient = new com.jw.screw.consumer.RpcClient(consumerConfig);
+        this.rpcClient = new RpcClient(consumerConfig);
         NettyClientConfig registryConfig = consumerConfig.getRegistryConfig();
         if (registryConfig != null) {
             register(registryConfig.getDefaultAddress().getHost(), registryConfig.getDefaultAddress().getPort());
@@ -68,8 +68,8 @@ public class NettyConsumer extends com.jw.screw.consumer.AbstractConsumer {
     }
 
     @Override
-    public com.jw.screw.consumer.ConnectionWatcher watchConnect(final ServiceMetadata serviceMetadata) throws InterruptedException, ConnectionException {
-        com.jw.screw.consumer.ConnectionWatcher connectionWatcher = new com.jw.screw.consumer.ConnectionWatcher() {
+    public ConnectionWatcher watchConnect(final ServiceMetadata serviceMetadata) throws InterruptedException, ConnectionException {
+        ConnectionWatcher connectionWatcher = new ConnectionWatcher() {
 
             final ReentrantLock notifyLock = new ReentrantLock();
 
@@ -202,7 +202,7 @@ public class NettyConsumer extends com.jw.screw.consumer.AbstractConsumer {
         NettyClientConfig registryConfig = new NettyClientConfig();
         registryConfig.setDefaultAddress(unresolvedAddress);
         consumerConfig.setRegistryConfig(registryConfig);
-        this.registerClient = new com.jw.screw.consumer.ConsumerClient(consumerConfig, this);
+        this.registerClient = new ConsumerClient(consumerConfig, this);
         this.registerClient.registerProcessors(Protocol.Code.RESPONSE_SUBSCRIBE,
                 new NettyConsumerSubscribeProcessor(notifyListeners),
                 new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory("consumer subscribe")));
@@ -221,7 +221,7 @@ public class NettyConsumer extends com.jw.screw.consumer.AbstractConsumer {
         connector.channelGroup().add(channel);
     }
 
-    public com.jw.screw.consumer.NettyConsumerConfig getConfig() {
+    public NettyConsumerConfig getConfig() {
         return this.consumerConfig;
     }
 

@@ -37,4 +37,8 @@ public class IdUtils {
     public static String getNextIdAsString() {
         return String.valueOf(getNextId());
     }
+
+    public static String toHex() {
+        return Long.toHexString(getNextId());
+    }
 }

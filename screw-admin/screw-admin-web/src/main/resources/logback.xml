@@ -9,17 +9,18 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="screw" class="com.jw.screw.logging.core.component.ScrewLogBack">
+    <appender name="SCREW" class="com.jw.screw.logging.core.component.ScrewLogBack">
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO,WARN,ERROR,FATAL</level>
+            <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
             <onMismatch>DENY</onMismatch>
         </filter>
-        <appName>本地日志输出</appName>
+        <appName>screw-admin本地日志输出</appName>
+        <enable>true</enable>
     </appender>
     <!-- 日志输出级别 -->
-    <root level="ALL">
+    <root level="ERROR">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="screw" />
+        <appender-ref ref="SCREW" />
     </root>
 </configuration>

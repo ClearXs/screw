@@ -1,11 +1,11 @@
 package com.jw.screw.storage.datax;
 
 import com.alibaba.fastjson.JSON;
-import com.zzht.patrol.screw.common.constant.StringPool;
-import com.zzht.patrol.screw.common.parser.FormatParser;
-import com.zzht.patrol.screw.common.util.FileUtils;
-import com.zzht.patrol.screw.storage.datax.job.JobHandle;
-import com.zzht.patrol.screw.storage.datax.properties.DataXProperties;
+import com.jw.screw.common.constant.StringPool;
+import com.jw.screw.common.parser.FormatParser;
+import com.jw.screw.common.util.FileUtils;
+import com.jw.screw.storage.datax.job.JobHandle;
+import com.jw.screw.storage.datax.properties.DataXProperties;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 

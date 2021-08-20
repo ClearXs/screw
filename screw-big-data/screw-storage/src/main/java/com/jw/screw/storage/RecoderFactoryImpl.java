@@ -1,13 +1,13 @@
 package com.jw.screw.storage;
 
 import com.jw.screw.common.constant.StringPool;
+import com.jw.screw.common.proxy.CglibInvocationInterceptor;
+import com.jw.screw.common.proxy.ProxyFactory;
 import com.jw.screw.common.util.ClassUtils;
 import com.jw.screw.common.util.Collections;
 import com.jw.screw.common.util.StringUtils;
 import com.jw.screw.storage.properties.StorageProperties;
 import com.jw.screw.storage.recoder.Recoder;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
 import javax.el.MethodNotFoundException;
@@ -100,39 +100,36 @@ public class RecoderFactoryImpl implements RecoderFactory {
     }
 
     @Override
-    public <T> Recoder<T> newRecord0(Class<T> clazz, Object... args) {
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(clazz);
-        enhancer.setCallback(new RecoderInterceptor());
-        return (Recoder<T>) clazz.cast(enhancer.create(ClassUtils.objectToClass(args), args));
+    public <T> Recoder<T> newRecord0(Class<Recoder<T>> clazz, Object... args) {
+        return ProxyFactory.proxy().newProxyInstance(clazz, new RecoderInterceptor(), args);
     }
 
-    private static class RecoderInterceptor implements MethodInterceptor {
+    private static class RecoderInterceptor implements CglibInvocationInterceptor {
 
         @Override
-        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        public Object invoke(Object object, Method method, Object[] args, MethodProxy proxy) throws Throwable {
             // 除去cglib method
             Method peelOffMethod = ClassUtils.getMethod(Recoder.class, method.getName(), method.getParameterTypes());
             // 因为直接采取Recoder接口作为查找的Class对象，所以就会存在Method不存在的情况，针对不存在的不做任何处理，直接进行调用
             if (peelOffMethod == null) {
-                return proxy.invokeSuper(obj, args);
+                return proxy.invokeSuper(object, args);
             }
             com.jw.screw.storage.AliasFor aliasFor = peelOffMethod.getAnnotation(com.jw.screw.storage.AliasFor.class);
             if (aliasFor == null) {
-                return proxy.invokeSuper(obj, args);
+                return proxy.invokeSuper(object, args);
             }
-            if (!(obj instanceof Recoder)) {
+            if (!(object instanceof Recoder)) {
                 return null;
             }
-            Class<? extends Recoder> recoderClass = ((Recoder) obj).getClass();
+            Class<? extends Recoder> recoderClass = ((Recoder) object).getClass();
             String alias = aliasFor.value();
             Class<?>[] classes = aliasFor.parameterTypes();
             try {
                 Method aliasMethod = recoderClass.getMethod(alias, classes);
                 aliasMethod.setAccessible(true);
-                return aliasMethod.invoke(obj, (Callable<Object>) () -> {
+                return aliasMethod.invoke(object, (Callable<Object>) () -> {
                     try {
-                        return proxy.invokeSuper(obj, args);
+                        return proxy.invokeSuper(object, args);
                     } catch (Throwable throwable) {
                         throwable.printStackTrace();
                     }
